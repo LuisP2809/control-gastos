@@ -2,16 +2,37 @@ import * as db from './db.js';
 import { balances, money } from './calculations.js';
 
 const savingForms = new WeakSet();
+const modal = document.querySelector('#modal');
+const modalBody = document.querySelector('#modalBody');
 
-document.addEventListener('submit', event => {
-  const form = event.target instanceof HTMLFormElement ? event.target : null;
-  const isTransferEdit = form?.id === 'editTransaction' && form.querySelector('[name="from"]') && form.querySelector('[name="to"]');
-  if (!isTransferEdit) return;
+const observer = new MutationObserver(bindTransferForm);
+if (modalBody) observer.observe(modalBody, { childList: true, subtree: true });
+bindTransferForm();
 
-  event.preventDefault();
-  event.stopImmediatePropagation();
-  void saveTransferEdit(form);
-}, true);
+function bindTransferForm() {
+  const originalForm = modalBody?.querySelector('#editTransaction');
+  const isTransfer = originalForm?.querySelector('[name="from"]') && originalForm.querySelector('[name="to"]');
+  if (!originalForm || !isTransfer || originalForm.dataset.transferFixBound === 'true') return;
+
+  const form = originalForm.cloneNode(true);
+  form.dataset.transferFixBound = 'true';
+  originalForm.replaceWith(form);
+  form.addEventListener('submit', event => {
+    event.preventDefault();
+    void saveTransferEdit(form);
+  });
+
+  const deleteButton = form.querySelector('#deleteTx');
+  if (deleteButton) {
+    deleteButton.addEventListener('click', async () => {
+      const id = Number(new FormData(form).get('id'));
+      if (!confirm('¿Eliminar definitivamente este movimiento?')) return;
+      await db.remove('transactions', id);
+      modal?.close();
+      location.reload();
+    });
+  }
+}
 
 async function saveTransferEdit(form) {
   if (savingForms.has(form) || !form.reportValidity()) return;
@@ -74,7 +95,7 @@ async function saveTransferEdit(form) {
       }
     }
 
-    document.querySelector('#modal')?.close();
+    modal?.close();
     showToast('Movimiento actualizado correctamente');
     setTimeout(() => location.reload(), 350);
   } catch (error) {
