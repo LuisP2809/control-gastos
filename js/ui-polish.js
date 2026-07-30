@@ -5,8 +5,8 @@ function polishInterface() {
   if (title?.textContent.trim() === 'Tu resumen') title.textContent = 'Resumen';
 
   document.querySelectorAll('.setting strong').forEach(element => {
-    if (element.textContent.includes('Mis Finanzas v')) {
-      element.textContent = 'Mi Control de gasto v0.2.0';
+    if (element.textContent.includes('Mis Finanzas v') || element.textContent.includes('Mi Control de gasto v')) {
+      element.textContent = 'Mi Control de gasto v0.3.0';
     }
   });
 }
