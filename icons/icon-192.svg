@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-labelledby="title desc">
+  <title id="title">Mis Finanzas</title>
+  <desc id="desc">Billetera blanca sobre fondo morado</desc>
+  <rect width="192" height="192" rx="42" fill="#5b5bd6"/>
+  <path d="M48 62h91a13 13 0 0 1 13 13v61a13 13 0 0 1-13 13H48a16 16 0 0 1-16-16V59a16 16 0 0 1 16-16h78a8 8 0 0 1 0 16H48v3Z" fill="#fff"/>
+  <path d="M111 86h49v39h-49a19.5 19.5 0 0 1 0-39Z" fill="#8ef0c4"/>
+  <circle cx="116" cy="105.5" r="6" fill="#4949b8"/>
+</svg>

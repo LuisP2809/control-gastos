@@ -1,0 +1,18 @@
+const DB='mis-finanzas', VERSION=1, STORES=['funds','transactions','categories','budgets','settings'];
+let promise;
+export function openDB(){return promise??=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,VERSION);r.onupgradeneeded=()=>{const db=r.result;STORES.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:'id',autoIncrement:s==='transactions'});});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
+export async function all(store){const db=await openDB();return req(db.transaction(store).objectStore(store).getAll());}
+export async function get(store,id){const db=await openDB();return req(db.transaction(store).objectStore(store).get(id));}
+export async function put(store,value){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).put(value));}
+export async function remove(store,id){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).delete(id));}
+export async function clear(store){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).clear());}
+function req(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+export async function initialize(){
+ if(!(await all('funds')).length)await put('funds',{id:crypto.randomUUID(),name:'Mi dinero',type:'Dinero propio',initial:0,icon:'💰',spendable:true,protected:false,created:Date.now()});
+ if(!(await all('categories')).length){const expenses=['Alimentación','Transporte','Hogar','Servicios','Salud','Estudios','Compras','Entretenimiento','Préstamos','Otros'];const incomes=['Sueldo','Trabajo adicional','Venta','Devolución','Préstamo recibido','Regalo','Transferencia recibida','Otros'];for(const [type,names] of [['expense',expenses],['income',incomes]])for(const name of names)await put('categories',{id:`${type}-${name}`,type,name});}
+ if(!(await get('settings','main')))await put('settings',{id:'main',monthlyLimit:1500,warning:70,critical:90,currency:'PEN',theme:'auto'});
+}
+export async function exportData(){const data={version:VERSION,exportedAt:new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Lima',dateStyle:'short',timeStyle:'medium'}).format(new Date())};for(const s of STORES)data[s]=await all(s);return data;}
+export async function importData(data){validateBackup(data);const database=await openDB();await new Promise((resolve,reject)=>{const transaction=database.transaction(STORES,'readwrite');transaction.oncomplete=resolve;transaction.onerror=()=>reject(transaction.error);transaction.onabort=()=>reject(transaction.error||Error('Importación cancelada'));for(const storeName of STORES){const store=transaction.objectStore(storeName);store.clear();for(const item of data[storeName]||[])store.put(structuredClone(item));}});await initialize();}
+function validateBackup(data){if(!data||typeof data!=='object'||!Array.isArray(data.funds)||!Array.isArray(data.transactions))throw Error('Copia no válida');for(const store of STORES)if(data[store]!==undefined&&!Array.isArray(data[store]))throw Error(`Colección ${store} no válida`);for(const fund of data.funds)if(typeof fund.id!=='string'||typeof fund.name!=='string'||!Number.isFinite(Number(fund.initial)))throw Error('Fondo no válido en la copia');for(const tx of data.transactions)if(!['income','expense','transfer'].includes(tx.type)||!/^\d{4}-\d{2}-\d{2}$/.test(tx.date)||!Number.isFinite(Number(tx.amount))||Number(tx.amount)<=0)throw Error('Movimiento no válido en la copia');}
+export {STORES};
