@@ -33,6 +33,8 @@ const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
 assert.match(app, /fund\.protected\s*\|\|\s*!fund\.spendable/);
 assert.match(app, /warning\s*>=\s*critical/);
+assert.match(app, /previousRange\(rangeValue\)/, 'Análisis debe comparar períodos de igual duración');
+assert.match(app, /fundsAt\(d\.funds,d\.txs,rangeValue\.end\)/, 'El gráfico de fondos debe usar el cierre del período');
 
 async function assertTextOnly(directory = '.') {
   const entries = await readdir(new URL(`${directory}/`, root), { withFileTypes: true });

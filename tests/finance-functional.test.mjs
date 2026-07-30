@@ -8,7 +8,9 @@ import {
   inRange,
   localDate,
   monthlySeries,
+  previousRange,
   summary,
+  fundsAt,
 } from '../js/calculations.js';
 
 const funds = [
@@ -47,7 +49,7 @@ test('las transferencias cambian fondos pero no ingresos ni gastos', () => {
 
 test('aplica rangos actual, anterior, múltiples meses y personalizado', () => {
   assert.deepEqual(dateRange('previous', '2026-07-15'), { start: '2026-06-01', end: '2026-06-30' });
-  assert.deepEqual(dateRange('3', '2026-07-15'), { start: '2026-04-01', end: '2026-07-15' });
+  assert.deepEqual(dateRange('3', '2026-07-15'), { start: '2026-05-01', end: '2026-07-15' });
   const custom = dateRange('custom', '2026-07-15', { start: '2026-05-05', end: '2026-06-02' });
   assert.deepEqual(inRange(transactions, custom).map(t => t.id), [2, 3, 4]);
 });
@@ -59,10 +61,21 @@ test('31 de marzo calcula febrero completo como mes anterior', () => {
   });
 });
 
-test('seis meses desde 31 de agosto comienzan el 1 de febrero', () => {
+test('seis meses desde 31 de agosto comienzan el 1 de marzo', () => {
   assert.deepEqual(dateRange('6', '2026-08-31'), {
-    start: '2026-02-01',
+    start: '2026-03-01',
     end: '2026-08-31',
+  });
+});
+
+test('el período de comparación tiene la misma duración y es inmediatamente anterior', () => {
+  assert.deepEqual(previousRange({ start: '2026-05-01', end: '2026-07-15' }), {
+    start: '2026-02-14',
+    end: '2026-04-30',
+  });
+  assert.deepEqual(previousRange({ start: '2026-05-05', end: '2026-06-02' }), {
+    start: '2026-04-06',
+    end: '2026-05-04',
   });
 });
 
@@ -87,4 +100,12 @@ test('genera evolución del saldo y omite transferencias del total', () => {
   const evolution = balanceEvolution(funds, transactions, { start: '2026-05-01', end: '2026-06-30' });
   assert.deepEqual(evolution.map(point => point.balance), [1700, 1600, 1550, 1850]);
   assert.ok(evolution.every(point => point.date !== '2026-05-06'));
+});
+
+test('calcula fondos disponibles y protegidos al cierre del período', () => {
+  const atMayEnd = fundsAt(funds, transactions, '2026-05-31');
+  assert.deepEqual(atMayEnd.bal, { daily: 1150, savings: 450 });
+  assert.equal(atMayEnd.available, 1150);
+  assert.equal(atMayEnd.protectedMoney, 450);
+  assert.equal(atMayEnd.total, 1600);
 });
