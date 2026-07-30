@@ -31,16 +31,26 @@ const html = await readFile(new URL('index.html', root), 'utf8');
 assert.doesNotMatch(html, /<dialog[^>]*>\s*<form/i, 'El diálogo no debe envolver otros formularios');
 assert.match(html, /dashboard-v2\.css/, 'La página debe cargar los estilos del nuevo resumen');
 assert.match(html, /js\/dashboard-v2\.js/, 'La página debe cargar el módulo del nuevo resumen');
+assert.match(html, /movements-v2\.css/, 'La página debe cargar los estilos del historial moderno');
+assert.match(html, /js\/movements-v2\.js/, 'La página debe cargar el módulo del historial moderno');
 
 const dashboard = await readFile(new URL('js/dashboard-v2.js', root), 'utf8');
 assert.match(dashboard, /data-dashboard-v2="ready"/);
 assert.match(dashboard, /summary-kpis/);
 assert.match(dashboard, /summary-panels/);
 
+const movements = await readFile(new URL('js/movements-v2.js', root), 'utf8');
+assert.match(movements, /data-movements-v2="ready"/);
+assert.match(movements, /movement-filter-grid/);
+assert.match(movements, /groupedMovements/);
+assert.match(movements, /data-detail/);
+
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v12/);
+assert.match(serviceWorker, /mi-control-gasto-v13/);
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
+assert.match(serviceWorker, /movements-v2\.css/);
+assert.match(serviceWorker, /js\/movements-v2\.js/);
 
 const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
@@ -64,4 +74,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: rutas, dashboard responsive, SVG y archivos de texto correctos.');
+console.log('Validación PWA completada: rutas, dashboard, movimientos responsive, SVG y archivos de texto correctos.');
