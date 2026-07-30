@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 const sections = [
-  { name: /Inicio|Resumen/, selector: '.dashboard-v2', title: 'Resumen' },
-  { name: 'Movimientos', selector: '.movements-v2', title: 'Movimientos' },
-  { name: 'Registrar', selector: '.register-v2', title: 'Registrar' },
-  { name: 'Fondos', selector: '.funds-v2', title: 'Fondos' },
-  { name: 'Análisis', selector: '.analysis-v2', title: 'Análisis' },
-  { name: 'Ajustes', selector: '.settings-v2', title: 'Ajustes' },
+  { page: 'home', selector: '.dashboard-v2', title: 'Resumen' },
+  { page: 'moves', selector: '.movements-v2', title: 'Movimientos' },
+  { page: 'register', selector: '.register-v2', title: 'Registrar' },
+  { page: 'funds', selector: '.funds-v2', title: 'Fondos' },
+  { page: 'analysis', selector: '.analysis-v2', title: 'Análisis' },
+  { page: 'settings', selector: '.settings-v2', title: 'Ajustes' },
 ];
 
 test('revisión final de navegación, accesibilidad y funcionamiento offline', async ({ page, context }) => {
@@ -15,7 +15,7 @@ test('revisión final de navegación, accesibilidad y funcionamiento offline', a
   await expect(page.locator('.dashboard-v2')).toBeVisible();
 
   for (const section of sections) {
-    await page.getByRole('button', { name: section.name }).click();
+    await page.locator(`.bottom button[data-page="${section.page}"]`).click();
     await expect(page.locator(section.selector)).toBeVisible();
     await expect(page.locator('.bottom button[aria-current="page"]')).toHaveCount(1);
     await expect(page.locator('.bottom button[aria-current="page"]')).toContainText(section.title);
@@ -45,7 +45,7 @@ test('revisión final de navegación, accesibilidad y funcionamiento offline', a
   }));
   expect(themeState.color).toBe(themeState.dark ? '#090d18' : '#f3f5fb');
 
-  await page.getByRole('button', { name: /Inicio|Resumen/ }).click();
+  await page.locator('.bottom button[data-page="home"]').click();
   await expect(page.locator('.dashboard-v2')).toBeVisible();
   await page.evaluate(() => navigator.serviceWorker.ready);
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBeTruthy();
