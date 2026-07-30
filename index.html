@@ -1,6 +1,62 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#5b5bd6"><meta name="description" content="Control personal de finanzas, privado y sin conexión"><link rel="manifest" href="./manifest.webmanifest"><link rel="icon" href="./icons/icon-192.svg"><link rel="stylesheet" href="./styles.css"><title>Mis Finanzas</title></head>
-<body><header class="top"><div><small>Hola, Luis</small><h1>Mis Finanzas</h1></div><button id="themeQuick" class="icon" aria-label="Cambiar tema">◐</button></header>
-<main id="app" tabindex="-1"></main>
-<nav class="bottom" aria-label="Navegación principal">
- <button data-page="home" class="active"><span>⌂</span>Inicio</button><button data-page="moves"><span>↕</span>Movimientos</button><button data-page="register" class="primary"><span>＋</span>Registrar</button><button data-page="funds"><span>◉</span>Fondos</button><button data-page="analysis"><span>▥</span>Análisis</button><button data-page="settings"><span>⚙</span>Ajustes</button>
-</nav><dialog id="modal" aria-labelledby="modalTitle"><button id="modalClose" class="close" type="button" aria-label="Cerrar">×</button><div id="modalBody"></div></dialog><div id="toast" role="status" aria-live="polite"></div><script type="module" src="./js/app.js"></script><script type="module" src="./js/transaction-edit-fix.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#090d18">
+  <meta name="description" content="Control personal de finanzas, privado y sin conexión">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/icon-192.svg">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Mi Control de gasto</title>
+</head>
+<body>
+  <div id="splash" class="splash" aria-hidden="true">
+    <div class="splash-content">
+      <h2>Mi Control de gasto</h2>
+      <i></i>
+      <p>Luis Pineda</p>
+    </div>
+  </div>
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">▥</span>
+      <div class="brand-copy">
+        <h1>Mi Control de gasto</h1>
+        <small>Luis Pineda</small>
+      </div>
+    </div>
+    <button id="themeQuick" class="icon" aria-label="Cambiar tema">◐</button>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <nav class="bottom" aria-label="Navegación principal">
+    <button data-page="home" class="active"><span>⌂</span><b>Resumen</b></button>
+    <button data-page="moves"><span>↕</span><b>Movimientos</b></button>
+    <button data-page="register" class="primary"><span>＋</span><b>Registrar</b></button>
+    <button data-page="funds"><span>◉</span><b>Fondos</b></button>
+    <button data-page="analysis"><span>▥</span><b>Análisis</b></button>
+    <button data-page="settings"><span>⚙</span><b>Ajustes</b></button>
+    <div class="privacy-card" aria-hidden="true">
+      <span>♢</span>
+      <div><strong>Datos 100% privados</strong><small>Guardados solo en tu dispositivo</small></div>
+    </div>
+  </nav>
+
+  <dialog id="modal" aria-labelledby="modalTitle">
+    <button id="modalClose" class="close" type="button" aria-label="Cerrar">×</button>
+    <div id="modalBody"></div>
+  </dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.addEventListener('load', () => {
+      window.setTimeout(() => document.querySelector('#splash')?.classList.add('hide'), 900);
+    });
+  </script>
+  <script type="module" src="./js/app.js"></script>
+  <script type="module" src="./js/transaction-edit-fix.js"></script>
+</body>
+</html>
