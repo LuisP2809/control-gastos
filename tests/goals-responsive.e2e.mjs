@@ -24,7 +24,7 @@ test('una meta separa ahorro sin alterar el dinero total', async ({ page }) => {
     });
   });
 
-  await page.getByRole('button', { name: 'Metas de ahorro' }).click();
+  await page.locator('.bottom [data-page="goals"]').click();
   await expect(page.locator('.goals-v1')).toBeVisible();
   await page.getByRole('button', { name: /Nueva meta|Crear primera meta/ }).first().click();
 
@@ -71,7 +71,7 @@ test('una meta separa ahorro sin alterar el dinero total', async ({ page }) => {
   expect(distribution.available).toBe(2400);
 
   await page.reload();
-  await page.getByRole('button', { name: 'Metas de ahorro' }).click();
+  await page.locator('.bottom [data-page="goals"]').click();
   await expect(page.locator('.goal-card').filter({ hasText: 'Laptop nueva' })).toBeVisible();
   await expect(page.locator('.allocation-value.tone-available strong')).toContainText('2,400.00');
 
@@ -86,7 +86,7 @@ test('una meta separa ahorro sin alterar el dinero total', async ({ page }) => {
 
 test('las metas aparecen separadas en resumen, fondos y análisis', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Metas de ahorro' }).click();
+  await page.locator('.bottom [data-page="goals"]').click();
   await page.getByRole('button', { name: /Nueva meta|Crear primera meta/ }).first().click();
   await page.locator('#goalForm [name=name]').fill('Fondo de emergencia');
   await page.locator('#goalForm [name=targetAmount]').fill('5000');
