@@ -1,39 +1,46 @@
 import { test, expect } from '@playwright/test';
 
-async function selectValueByText(select,text) {
-  const value = await select.locator('option',{hasText:text}).getAttribute('value');
-  expect(value).not.toBeNull();
-  return value;
-}
+async function seedMovements(page) {
+  await page.evaluate(async () => {
+    const database = await new Promise((resolve,reject) => {
+      const request = indexedDB.open('mis-finanzas',1);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
 
-async function createFund(page,name,initial) {
-  await page.getByRole('button',{name:/Fondos/}).click();
-  await page.getByRole('button',{name:/Nuevo/}).click();
-  await page.locator('#fundForm [name=name]').fill(name);
-  await page.locator('#fundForm [name=type]').selectOption({label:'Dinero propio'});
-  await page.locator('#fundForm [name=initial]').fill(String(initial));
-  await page.locator('#fundForm button[type=submit]').click();
-  await expect(page.getByText('Fondo guardado correctamente')).toBeVisible();
-}
+    const parts = new Intl.DateTimeFormat('en-CA',{
+      timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'
+    }).formatToParts(new Date());
+    const values = Object.fromEntries(parts.map(part => [part.type,part.value]));
+    const date = `${values.year}-${values.month}-${values.day}`;
 
-async function registerMovement(page,{type,amount,description,fundName}) {
-  await page.getByRole('button',{name:/Registrar/}).click();
-  await page.getByRole('button',{name:type === 'expense' ? 'Gasto' : 'Ingreso',exact:true}).click();
-  const form = page.locator('#transactionForm');
-  const fund = form.locator('[name=fund]');
-  await fund.selectOption(await selectValueByText(fund,fundName));
-  await form.locator('[name=amount]').fill(String(amount));
-  await form.locator('[name=description]').fill(description);
-  await form.locator('button').click();
-  await expect(form).toHaveCount(0);
+    await new Promise((resolve,reject) => {
+      const transaction = database.transaction(['funds','transactions'],'readwrite');
+      transaction.oncomplete = resolve;
+      transaction.onerror = () => reject(transaction.error);
+      transaction.onabort = () => reject(transaction.error);
+      transaction.objectStore('funds').put({
+        id:'principal-movements-test',name:'Principal',type:'Dinero propio',initial:1000,
+        icon:'💰',spendable:true,protected:false,created:Date.now()
+      });
+      transaction.objectStore('transactions').add({
+        type:'expense',amount:120,description:'Compra de alimentos',category:'Alimentación',
+        method:'Tarjeta',fund:'principal-movements-test',date,created:Date.now()
+      });
+      transaction.objectStore('transactions').add({
+        type:'income',amount:500,description:'Pago de trabajo',category:'Trabajo adicional',
+        method:'Transferencia',fund:'principal-movements-test',date,created:Date.now()+1
+      });
+    });
+    database.close();
+  });
 }
 
 test('movimientos filtra correctamente y no se distorsiona',async({page}) => {
   await page.setViewportSize({width:390,height:844});
   await page.goto('/');
-  await createFund(page,'Principal',1000);
-  await registerMovement(page,{type:'expense',amount:120,description:'Compra de alimentos',fundName:'Principal'});
-  await registerMovement(page,{type:'income',amount:500,description:'Pago de trabajo',fundName:'Principal'});
+  await seedMovements(page);
+  await page.reload();
 
   await page.getByRole('button',{name:/Movimientos/}).click();
   await expect(page.locator('.movements-v2')).toBeVisible();
