@@ -6,7 +6,7 @@ function polishInterface() {
 
   document.querySelectorAll('.setting strong').forEach(element => {
     if (element.textContent.includes('Mis Finanzas v') || element.textContent.includes('Mi Control de gasto v')) {
-      element.textContent = 'Mi Control de gasto v0.4.0';
+      element.textContent = 'Mi Control de gasto v0.5.0';
     }
   });
 
