@@ -1,0 +1,46 @@
+:root{--tap-size:44px}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-bottom:calc(108px + env(safe-area-inset-bottom));overscroll-behavior-x:none}
+body{overscroll-behavior-x:none}
+button,.btn,[role="button"],input,select,textarea,label{-webkit-tap-highlight-color:transparent}
+button,.btn,[role="button"]{touch-action:manipulation}
+button:disabled,.btn:disabled{cursor:not-allowed;opacity:.62}
+img,svg,canvas{max-width:100%}
+[hidden]{display:none!important}
+.bottom button{min-height:var(--tap-size)}
+.bottom button[aria-current="page"]{position:relative}
+.bottom button[aria-current="page"]::after{content:"";position:absolute;left:50%;bottom:1px;width:18px;height:2px;transform:translateX(-50%);border-radius:99px;background:currentColor;opacity:.7}
+.page h2,.page h3,.page h4{overflow-wrap:anywhere}
+input,select,textarea{accent-color:var(--primary)}
+input[type="checkbox"],input[type="radio"]{min-height:auto}
+dialog{overscroll-behavior:contain}
+.sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+
+@media(max-width:767px){
+  input,select,textarea{font-size:16px}
+  .btn{min-height:var(--tap-size)}
+  .bottom button{min-height:48px}
+}
+
+@media(max-width:479px){
+  dialog{width:calc(100vw - 12px);max-height:calc(100dvh - 12px);padding-bottom:max(16px,env(safe-area-inset-bottom))}
+  #toast{width:max-content;max-width:calc(100vw - 24px)}
+}
+
+@media(max-width:359px){
+  .bottom{gap:0}
+  .bottom button{padding-left:1px;padding-right:1px}
+  .bottom button span{font-size:18px}
+  .bottom button b{font-size:8px;letter-spacing:-.025em}
+  .bottom .primary span{width:38px;height:38px}
+}
+
+@media(min-width:1024px){
+  .bottom .primary{order:0}
+  .bottom button[aria-current="page"]::after{left:8px;top:50%;bottom:auto;width:3px;height:22px;transform:translateY(-50%)}
+}
+
+@media(prefers-contrast:more){
+  :root{--line:color-mix(in srgb,currentColor 34%,transparent);--shadow:none}
+  .card,.fund-v2-card,.settings-card,.analysis-panel,.dashboard-panel{border-width:2px}
+  button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline-width:4px}
+}
