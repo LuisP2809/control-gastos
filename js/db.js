@@ -3,10 +3,11 @@ let promise;
 export function openDB(){return promise??=new Promise((resolve,reject)=>{const r=indexedDB.open(DB,VERSION);r.onupgradeneeded=()=>{const db=r.result;STORES.forEach(s=>{if(!db.objectStoreNames.contains(s))db.createObjectStore(s,{keyPath:'id',autoIncrement:s==='transactions'});});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 export async function all(store){const db=await openDB();return req(db.transaction(store).objectStore(store).getAll());}
 export async function get(store,id){const db=await openDB();return req(db.transaction(store).objectStore(store).get(id));}
-export async function put(store,value){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).put(value));}
-export async function remove(store,id){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).delete(id));}
-export async function clear(store){const db=await openDB();return req(db.transaction(store,'readwrite').objectStore(store).clear());}
+export async function put(store,value){return write(store,objectStore=>objectStore.put(value));}
+export async function remove(store,id){return write(store,objectStore=>objectStore.delete(id));}
+export async function clear(store){return write(store,objectStore=>objectStore.clear());}
 function req(r){return new Promise((res,rej)=>{r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function write(store,operation){const db=await openDB();return new Promise((resolve,reject)=>{const transaction=db.transaction(store,'readwrite');let requestResult;transaction.oncomplete=()=>resolve(requestResult);transaction.onerror=()=>reject(transaction.error||Error('La transacción de IndexedDB falló.'));transaction.onabort=()=>reject(transaction.error||Error('La transacción de IndexedDB fue cancelada.'));const request=operation(transaction.objectStore(store));request.onsuccess=()=>{requestResult=request.result};request.onerror=()=>{/* La transacción comunica el error definitivo. */};});}
 export async function initialize(){
  if(!(await all('funds')).length)await put('funds',{id:crypto.randomUUID(),name:'Mi dinero',type:'Dinero propio',initial:0,icon:'💰',spendable:true,protected:false,created:Date.now()});
  if(!(await all('categories')).length){const expenses=['Alimentación','Transporte','Hogar','Servicios','Salud','Estudios','Compras','Entretenimiento','Préstamos','Otros'];const incomes=['Sueldo','Trabajo adicional','Venta','Devolución','Préstamo recibido','Regalo','Transferencia recibida','Otros'];for(const [type,names] of [['expense',expenses],['income',incomes]])for(const name of names)await put('categories',{id:`${type}-${name}`,type,name});}

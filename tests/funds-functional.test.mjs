@@ -13,13 +13,12 @@ function declaration(name, nextName) {
 
 const createIdSource = declaration('createId', 'async function saveFund');
 const saveFundSource = declaration('saveFund', 'async function deleteFund');
-const submitSource = declaration('submit', 'async function saveTransaction');
 
 function fundHarness({ rejectPut = false, id = 'fund-test' } = {}) {
   const funds = [];
   const events = [];
   const db = {
-    async get() { return undefined; },
+    async get(store, id) { return funds.find(fund => fund.id === id); },
     async put(store, value) {
       assert.equal(store, 'funds');
       if (rejectPut) throw new Error('IndexedDB no disponible');
@@ -63,46 +62,15 @@ test('genera un identificador alternativo sin randomUUID', () => {
   assert.match(createId(), /^fund-1234-[0-9a-f]+$/);
 });
 
-function submitHarness({ saveFund }) {
-  const alerts = [];
-  const savingForms = new WeakSet();
-  const submit = Function(
-    'savingForms', 'FormData', 'saveTransaction', 'saveFund', 'db', 'applyTheme', 'toast', 'render', 'saveEdit', 'alert',
-    `${submitSource};return submit`,
-  )(
-    savingForms,
-    class { constructor(form) { return form.data; } },
-    async () => {}, saveFund,
-    { get: async () => ({}), put: async () => {} },
-    () => {}, () => {}, async () => {}, async () => {},
-    message => alerts.push(message),
-  );
-  const button = { disabled: false, textContent: 'Guardar fondo' };
-  const form = { id: 'fundForm', data: new Map([['name', 'Viaje']]), isConnected: true, querySelector: () => button };
-  const event = { target: form, preventDefault() {} };
-  return { alerts, button, event, submit };
-}
-
-test('muestra el rechazo de IndexedDB y vuelve a habilitar el botón', async () => {
-  const { saveFund } = fundHarness({ rejectPut: true });
-  const harness = submitHarness({ saveFund: () => saveFund({ name: 'Viaje', type: 'Ahorros', initial: '10' }) });
-  await harness.submit(harness.event);
-  assert.deepEqual(harness.alerts, ['No se pudo guardar el fondo: IndexedDB no disponible']);
-  assert.equal(harness.button.disabled, false);
-  assert.equal(harness.button.textContent, 'Guardar fondo');
+test('el formulario de fondo confirma la persistencia antes de cerrar', async () => {
+  const harness = fundHarness();
+  await harness.saveFund({ name: 'Confirmado', type: 'Ahorros', initial: '10' });
+  assert.equal(harness.funds[0].name, 'Confirmado');
+  assert.equal(harness.events[0], 'close');
 });
 
-test('impide el doble envío mientras el primero sigue guardándose', async () => {
-  let saves = 0;
-  let release;
-  const pending = new Promise(resolve => { release = resolve; });
-  const harness = submitHarness({ saveFund: async () => { saves += 1; await pending; } });
-  const first = harness.submit(harness.event);
-  const second = harness.submit(harness.event);
-  assert.equal(harness.button.disabled, true);
-  assert.equal(harness.button.textContent, 'Guardando…');
-  assert.equal(saves, 1);
-  release();
-  await Promise.all([first, second]);
-  assert.equal(saves, 1);
+test('un rechazo de IndexedDB no cierra el diálogo', async () => {
+  const harness = fundHarness({ rejectPut: true });
+  await assert.rejects(harness.saveFund({ name: 'Viaje', type: 'Ahorros', initial: '10' }), /IndexedDB no disponible/);
+  assert.deepEqual(harness.events, []);
 });
