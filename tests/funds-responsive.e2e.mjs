@@ -31,7 +31,7 @@ test('fondos muestra saldos, filtros y acciones sin distorsión', async ({ page 
   await page.getByRole('button',{name:/Fondos/}).click();
 
   await expect(page.locator('.funds-v2')).toBeVisible();
-  await expect(page.locator('.fund-stat')).toHaveCount(4);
+  await expect(page.locator('.fund-stat')).toHaveCount(5);
   await expect(page.locator('.fund-v2-card')).toHaveCount(3);
   await expect(page.locator('.fund-v2-card').filter({hasText:'Principal'})).toContainText('S/ 780.00');
   await expect(page.locator('.fund-v2-card').filter({hasText:'Ahorro protegido'})).toContainText('S/ 600.00');
