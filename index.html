@@ -2,11 +2,18 @@
 <html lang="es">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#090d18">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
+  <meta id="themeColor" name="theme-color" content="#090d18">
+  <meta name="color-scheme" content="dark light">
   <meta name="description" content="Control personal de finanzas, privado y sin conexión">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mi Control">
+  <meta name="format-detection" content="telephone=no">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/icon-192.svg">
+  <link rel="apple-touch-icon" href="./icons/icon-192.svg">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./dashboard-v2.css">
   <link rel="stylesheet" href="./movements-v2.css">
@@ -14,6 +21,7 @@
   <link rel="stylesheet" href="./register-v2.css">
   <link rel="stylesheet" href="./analysis-v2.css">
   <link rel="stylesheet" href="./settings-v2.css">
+  <link rel="stylesheet" href="./final-polish.css">
   <title>Mi Control de gasto</title>
 </head>
 <body>
@@ -33,18 +41,18 @@
         <small>Luis Pineda</small>
       </div>
     </div>
-    <button id="themeQuick" class="icon" aria-label="Cambiar tema">◐</button>
+    <button id="themeQuick" class="icon" type="button" aria-label="Cambiar tema" aria-pressed="false">◐</button>
   </header>
 
   <main id="app" tabindex="-1"></main>
 
   <nav class="bottom" aria-label="Navegación principal">
-    <button data-page="home" class="active" aria-label="Inicio - Resumen"><span>⌂</span><b>Resumen</b></button>
-    <button data-page="moves"><span>↕</span><b>Movimientos</b></button>
-    <button data-page="register" class="primary"><span>＋</span><b>Registrar</b></button>
-    <button data-page="funds"><span>◉</span><b>Fondos</b></button>
-    <button data-page="analysis"><span>▥</span><b>Análisis</b></button>
-    <button data-page="settings"><span>⚙</span><b>Ajustes</b></button>
+    <button type="button" data-page="home" class="active" aria-label="Inicio - Resumen" aria-current="page"><span>⌂</span><b>Resumen</b></button>
+    <button type="button" data-page="moves" aria-label="Movimientos"><span>↕</span><b>Movimientos</b></button>
+    <button type="button" data-page="register" class="primary" aria-label="Registrar"><span>＋</span><b>Registrar</b></button>
+    <button type="button" data-page="funds" aria-label="Fondos"><span>◉</span><b>Fondos</b></button>
+    <button type="button" data-page="analysis" aria-label="Análisis"><span>▥</span><b>Análisis</b></button>
+    <button type="button" data-page="settings" aria-label="Ajustes"><span>⚙</span><b>Ajustes</b></button>
     <div class="privacy-card" aria-hidden="true">
       <span>♢</span>
       <div><strong>Datos 100% privados</strong><small>Guardados solo en tu dispositivo</small></div>
@@ -71,5 +79,6 @@
   <script type="module" src="./js/register-v2.js"></script>
   <script type="module" src="./js/analysis-v2.js"></script>
   <script type="module" src="./js/settings-v2.js"></script>
+  <script type="module" src="./js/final-polish.js"></script>
 </body>
 </html>
