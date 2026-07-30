@@ -44,6 +44,9 @@ assert.match(html, /movements-v2\.css/, 'La página debe cargar los estilos del 
 assert.match(html, /js\/movements-v2\.js/, 'La página debe cargar el módulo del historial moderno');
 assert.match(html, /funds-v2\.css/, 'La página debe cargar los estilos modernos de fondos');
 assert.match(html, /js\/funds-v2\.js/, 'La página debe cargar el módulo moderno de fondos');
+assert.match(html, /goals-v1\.css/, 'La página debe cargar los estilos de metas');
+assert.match(html, /js\/goals-v1\.js/, 'La página debe cargar el módulo de metas');
+assert.match(html, /data-page="goals"/, 'La navegación debe incluir metas de ahorro');
 assert.match(html, /register-v2\.css/, 'La página debe cargar los estilos modernos de registro');
 assert.match(html, /js\/register-v2\.js/, 'La página debe cargar el módulo moderno de registro');
 assert.match(html, /analysis-v2\.css/, 'La página debe cargar los estilos modernos de análisis');
@@ -70,6 +73,17 @@ assert.match(funds, /fund-stat-grid/);
 assert.match(funds, /fund-card-grid/);
 assert.match(funds, /data-editfund/);
 assert.match(funds, /data-delfund/);
+
+const goals = await readFile(new URL('js/goals-v1.js', root), 'utf8');
+assert.match(goals, /data-goals-v1="ready"/);
+assert.match(goals, /kind:GOAL_KIND/);
+assert.match(goals, /reserveKind:'goal'/);
+assert.match(goals, /goalAction:'contribution'/);
+assert.match(goals, /goalAction:'withdrawal'/);
+assert.match(goals, /data-new-goal/);
+assert.match(goals, /data-contribute-goal/);
+assert.match(goals, /data-withdraw-goal/);
+assert.match(goals, /Disponible real/);
 
 const register = await readFile(new URL('js/register-v2.js', root), 'utf8');
 assert.match(register, /data-register-v2="ready"/);
@@ -101,7 +115,14 @@ assert.match(settings, /data-export/);
 assert.match(settings, /data-csv/);
 assert.match(settings, /data-reset/);
 
+const calculations = await readFile(new URL('js/calculations.js', root), 'utf8');
+assert.match(calculations, /isGoalFund/);
+assert.match(calculations, /goalMoney/);
+assert.match(calculations, /available:total-reservedMoney/);
+assert.match(calculations, /!isGoalFund\(f\)/, 'Las metas no deben mezclarse con el protegido general');
+
 const finalPolish = await readFile(new URL('js/final-polish.js', root), 'utf8');
+assert.match(finalPolish, /goals: 'Metas de ahorro'/);
 assert.match(finalPolish, /aria-current/);
 assert.match(finalPolish, /aria-labelledby/);
 assert.match(finalPolish, /themeColor/);
@@ -111,11 +132,11 @@ assert.match(finalStyles, /font-size:16px/, 'Los campos móviles deben evitar zo
 assert.match(finalStyles, /\.bottom \.primary\{order:0\}/, 'Registrar debe conservar su posición en escritorio');
 
 const uiPolish = await readFile(new URL('js/ui-polish.js', root), 'utf8');
-assert.match(uiPolish, /Mi Control de gasto v1\.0\.0/);
+assert.match(uiPolish, /Mi Control de gasto v1\.1\.0/);
 assert.match(uiPolish, /text !== VERSION_LABEL/, 'La versión no debe provocar un ciclo de renderizado');
 
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v18/);
+assert.match(serviceWorker, /mi-control-gasto-v19/);
 assert.match(serviceWorker, /request\.mode==='navigate'/);
 assert.match(serviceWorker, /self\.location\.origin/);
 assert.match(serviceWorker, /outdated\.length>0/, 'La primera instalación no debe recargar la página actual');
@@ -125,6 +146,8 @@ assert.match(serviceWorker, /movements-v2\.css/);
 assert.match(serviceWorker, /js\/movements-v2\.js/);
 assert.match(serviceWorker, /funds-v2\.css/);
 assert.match(serviceWorker, /js\/funds-v2\.js/);
+assert.match(serviceWorker, /goals-v1\.css/);
+assert.match(serviceWorker, /js\/goals-v1\.js/);
 assert.match(serviceWorker, /register-v2\.css/);
 assert.match(serviceWorker, /js\/register-v2\.js/);
 assert.match(serviceWorker, /analysis-v2\.css/);
@@ -156,4 +179,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: versión 1.0.0, navegación accesible, instalación móvil y caché offline correctos.');
+console.log('Validación PWA completada: versión 1.1.0, metas de ahorro, disponible real y caché offline correctos.');

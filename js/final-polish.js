@@ -9,6 +9,7 @@ const pageNames = {
   moves: 'Movimientos',
   register: 'Registrar',
   funds: 'Fondos',
+  goals: 'Metas de ahorro',
   analysis: 'Análisis',
   settings: 'Ajustes',
 };

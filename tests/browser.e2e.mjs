@@ -125,7 +125,7 @@ test('el resumen no se distorsiona en celular ni escritorio', async ({ page }) =
   await page.goto('/');
 
   await expect(page.locator('.dashboard-v2')).toBeVisible();
-  await expect(page.locator('.summary-kpi')).toHaveCount(6);
+  await expect(page.locator('.summary-kpi')).toHaveCount(7);
   await expect(page.locator('.summary-panels')).toBeVisible();
   await expect(page.locator('.bottom')).toBeVisible();
   await expect(page.locator('.privacy-card')).toBeHidden();
