@@ -27,6 +27,13 @@ for (const file of referencedFiles) {
   assert.doesNotMatch(contents, /(?:href|src)="\//i, `${file} contiene una ruta absoluta`);
 }
 
+const html = await readFile(new URL('index.html', root), 'utf8');
+assert.doesNotMatch(html, /<dialog[^>]*>\s*<form/i, 'El diálogo no debe envolver otros formularios');
+const app = await readFile(new URL('js/app.js', root), 'utf8');
+assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
+assert.match(app, /fund\.protected\s*\|\|\s*!fund\.spendable/);
+assert.match(app, /warning\s*>=\s*critical/);
+
 async function assertTextOnly(directory = '.') {
   const entries = await readdir(new URL(`${directory}/`, root), { withFileTypes: true });
   for (const entry of entries) {
