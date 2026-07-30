@@ -49,7 +49,9 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   const editFund = page.locator('#editTransaction [name=fund]');
   await editFund.selectOption(await selectValueByText(editFund, 'Mi dinero'));
   await page.locator('#editTransaction [name=description]').fill('Descripción actualizada');
+  await page.evaluate(() => { window.confirm = () => true; });
   await page.locator('#editTransaction button[type=submit]').click();
+  await expect(page.getByText('Movimiento actualizado correctamente')).toBeVisible();
   await page.getByRole('button', { name: /Inicio/ }).click();
   await expect(page.getByText('S/ 30.00').first()).toBeVisible();
   await page.getByRole('button', { name: /Fondos/ }).click();
