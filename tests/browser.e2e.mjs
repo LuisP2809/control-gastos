@@ -115,3 +115,30 @@ test('al invertir una transferencia no se reutiliza el saldo del movimiento anti
   await expect(unchangedMovement).toContainText('Fondo A → Fondo B');
   await expect(unchangedMovement.locator('.amount')).toContainText('S/ 200.00');
 });
+
+test('el resumen no se distorsiona en celular ni escritorio', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  await expect(page.locator('.dashboard-v2')).toBeVisible();
+  await expect(page.locator('.summary-kpi')).toHaveCount(6);
+  await expect(page.locator('.summary-panels')).toBeVisible();
+  await expect(page.locator('.bottom')).toBeVisible();
+  await expect(page.locator('.privacy-card')).toBeHidden();
+
+  const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  expect(mobileOverflow).toBeLessThanOrEqual(1);
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator('.privacy-card')).toBeVisible();
+  await expect(page.locator('.summary-panels')).toHaveCSS('grid-template-columns', /.+ .+/);
+
+  const desktop = await page.evaluate(() => ({
+    overflow: document.documentElement.scrollWidth - window.innerWidth,
+    navPosition: getComputedStyle(document.querySelector('.bottom')).position,
+    navLeft: document.querySelector('.bottom').getBoundingClientRect().left,
+  }));
+  expect(desktop.overflow).toBeLessThanOrEqual(1);
+  expect(desktop.navPosition).toBe('fixed');
+  expect(desktop.navLeft).toBeLessThan(320);
+});
