@@ -33,6 +33,8 @@ assert.match(html, /dashboard-v2\.css/, 'La página debe cargar los estilos del 
 assert.match(html, /js\/dashboard-v2\.js/, 'La página debe cargar el módulo del nuevo resumen');
 assert.match(html, /movements-v2\.css/, 'La página debe cargar los estilos del historial moderno');
 assert.match(html, /js\/movements-v2\.js/, 'La página debe cargar el módulo del historial moderno');
+assert.match(html, /funds-v2\.css/, 'La página debe cargar los estilos modernos de fondos');
+assert.match(html, /js\/funds-v2\.js/, 'La página debe cargar el módulo moderno de fondos');
 
 const dashboard = await readFile(new URL('js/dashboard-v2.js', root), 'utf8');
 assert.match(dashboard, /data-dashboard-v2="ready"/);
@@ -45,12 +47,21 @@ assert.match(movements, /movement-filter-grid/);
 assert.match(movements, /groupedMovements/);
 assert.match(movements, /data-detail/);
 
+const funds = await readFile(new URL('js/funds-v2.js', root), 'utf8');
+assert.match(funds, /data-funds-v2="ready"/);
+assert.match(funds, /fund-stat-grid/);
+assert.match(funds, /fund-card-grid/);
+assert.match(funds, /data-editfund/);
+assert.match(funds, /data-delfund/);
+
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v13/);
+assert.match(serviceWorker, /mi-control-gasto-v14/);
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
 assert.match(serviceWorker, /movements-v2\.css/);
 assert.match(serviceWorker, /js\/movements-v2\.js/);
+assert.match(serviceWorker, /funds-v2\.css/);
+assert.match(serviceWorker, /js\/funds-v2\.js/);
 
 const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
@@ -74,4 +85,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: rutas, dashboard, movimientos responsive, SVG y archivos de texto correctos.');
+console.log('Validación PWA completada: rutas, dashboard, movimientos, fondos responsive, SVG y archivos de texto correctos.');
