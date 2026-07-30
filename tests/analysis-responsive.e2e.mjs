@@ -48,8 +48,8 @@ test('análisis compara períodos y no se distorsiona', async ({ page }) => {
   await expect(page.locator('.cashflow-svg')).toBeVisible();
   await expect(page.locator('.analysis-donut')).toBeVisible();
   await expect(page.locator('.analysis-insight')).toHaveCount(4);
-  await expect(page.getByText('S/ 1,200.00')).toBeVisible();
-  await expect(page.getByText('S/ 300.00')).toBeVisible();
+  await expect(page.locator('.analysis-kpi.tone-income strong')).toHaveText('S/ 1,200.00');
+  await expect(page.locator('.analysis-kpi.tone-expense strong')).toHaveText('S/ 300.00');
 
   await page.locator('#analysisRange').selectOption('3');
   await expect(page.locator('#analysisRange')).toHaveValue('3');
