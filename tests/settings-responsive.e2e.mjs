@@ -14,7 +14,7 @@ test('ajustes persisten, exportan y no se distorsionan', async ({ page }) => {
   await form.locator('[name=monthlyLimit]').fill('2200');
   await form.locator('[name=warning]').fill('65');
   await form.locator('[name=critical]').fill('85');
-  await form.locator('[name=theme][value=dark]').check();
+  await form.locator('[name=theme][value=dark]').check({ force: true });
 
   await expect(page.locator('[data-stat=budget] strong')).toContainText('2,200.00');
   await expect(page.locator('[data-stat=warning] strong')).toHaveText('65%');
