@@ -35,7 +35,7 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await expenseFund.selectOption(await selectValueByText(expenseFund, 'Deporte'));
   await page.locator('#transactionForm [name=amount]').fill('300');
   await page.locator('#transactionForm [name=description]').fill('Compra deportiva');
-  await page.locator('#transactionForm button').dblclick();
+  await page.locator('#transactionForm button[type=submit]').dblclick();
   await page.getByRole('button', { name: /Movimientos/ }).click();
   await page.getByRole('button', { name: 'Ver' }).click();
   await page.locator('#editTransaction [name=amount]').fill('30');
@@ -74,7 +74,7 @@ test('al invertir una transferencia no se reutiliza el saldo del movimiento anti
   await createFund(page, 'Fondo B', 0);
 
   await page.getByRole('button', { name: /Registrar/ }).click();
-  await page.getByRole('button', { name: 'Transferencia', exact: true }).click();
+  await page.locator('[data-reg="transfer"]').click();
 
   const from = page.locator('#transactionForm [name=from]');
   const to = page.locator('#transactionForm [name=to]');
@@ -84,7 +84,7 @@ test('al invertir una transferencia no se reutiliza el saldo del movimiento anti
   await to.selectOption(fundB);
   await page.locator('#transactionForm [name=amount]').fill('200');
   await page.locator('#transactionForm [name=description]').fill('Transferencia A B');
-  await page.locator('#transactionForm button').click();
+  await page.locator('#transactionForm button[type=submit]').click();
 
   await page.getByRole('button', { name: /Movimientos/ }).click();
   const originalMovement = page.locator('.movement').filter({ hasText: 'Transferencia A B' });
