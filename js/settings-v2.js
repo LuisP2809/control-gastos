@@ -18,8 +18,9 @@ async function enhanceSettings() {
   if (!app || enhancing) return;
   const page = app.querySelector('.page');
   const title = page?.querySelector('.pagehead h2')?.textContent.trim();
-  if (!page || title !== 'Ajustes' || page.dataset.settingsV2 === 'ready') return;
+  if (!page || title !== 'Ajustes' || page.dataset.settingsV2 === 'ready' || page.dataset.settingsV2 === 'loading') return;
 
+  page.dataset.settingsV2 = 'loading';
   enhancing = true;
   try {
     const originalImport = page.querySelector('#importFile');
@@ -28,23 +29,23 @@ async function enhanceSettings() {
       db.all('funds'),
       db.all('transactions'),
     ]);
-    const visible = app.querySelector('.page');
-    const currentTitle = visible?.querySelector('.pagehead h2')?.textContent.trim();
-    if (!visible || currentTitle !== 'Ajustes') return;
+    if (!page.isConnected) return;
 
     const totals = summary(funds, transactions);
     const template = document.createElement('template');
     template.innerHTML = renderSettings(settings, funds, transactions, totals).trim();
     const next = template.content.firstElementChild;
+    if (!next) throw new Error('No se pudo crear la estructura visual de Ajustes.');
     const placeholder = next.querySelector('#importFile');
     if (originalImport && placeholder) {
       originalImport.className = 'sr';
       originalImport.setAttribute('accept','application/json');
       placeholder.replaceWith(originalImport);
     }
-    visible.replaceWith(next);
+    page.replaceWith(next);
     bindSettings(next, totals.expense);
   } catch (error) {
+    if (page.isConnected) delete page.dataset.settingsV2;
     console.error('No se pudo construir la pantalla de ajustes.', error);
   } finally {
     enhancing = false;
@@ -149,6 +150,7 @@ function updateBudgetPreview(form, currentExpense) {
   const pct = limit > 0 ? currentExpense / limit * 100 : 0;
   const remaining = limit - currentExpense;
   const root = form.closest('.settings-v2');
+  if (!root) return;
 
   root.querySelector('[data-budget-fill]').style.width = `${Math.min(Math.max(pct,0),100)}%`;
   root.querySelector('[data-warning-marker]').style.left = `${warning}%`;
@@ -156,9 +158,9 @@ function updateBudgetPreview(form, currentExpense) {
   root.querySelector('[data-budget-summary]').textContent = `${money(currentExpense)} de ${money(limit)}`;
   root.querySelector('[data-budget-used]').textContent = `${Math.min(pct,999).toFixed(0)}% utilizado`;
   root.querySelector('[data-budget-remaining]').textContent = remaining >= 0 ? `${money(remaining)} disponibles` : `${money(Math.abs(remaining))} excedidos`;
-  root.querySelector('[data-stat=budget] strong').textContent = money(limit);
-  root.querySelector('[data-stat=warning] strong').textContent = `${warning}%`;
-  root.querySelector('[data-stat=critical] strong').textContent = `${critical}%`;
+  root.querySelector('[data-stat="budget"] strong').textContent = money(limit);
+  root.querySelector('[data-stat="warning"] strong').textContent = `${warning}%`;
+  root.querySelector('[data-stat="critical"] strong').textContent = `${critical}%`;
 
   const validation = root.querySelector('[data-settings-validation]');
   const valid = warning < critical;
@@ -184,5 +186,8 @@ function clamp(value, min, max) {
 
 if (app) {
   new MutationObserver(scheduleEnhancement).observe(app,{childList:true,subtree:true});
+  document.querySelector('.bottom')?.addEventListener('click', event => {
+    if (event.target.closest('[data-page="settings"]')) setTimeout(scheduleEnhancement,0);
+  });
   scheduleEnhancement();
 }
