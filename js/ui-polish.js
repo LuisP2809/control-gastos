@@ -4,9 +4,9 @@ function polishInterface() {
   const title = document.querySelector('.pagehead h2');
   if (title?.textContent.trim() === 'Tu resumen') title.textContent = 'Resumen';
 
-  document.querySelectorAll('.setting strong').forEach(element => {
+  document.querySelectorAll('strong').forEach(element => {
     if (element.textContent.includes('Mis Finanzas v') || element.textContent.includes('Mi Control de gasto v')) {
-      element.textContent = 'Mi Control de gasto v0.7.0';
+      element.textContent = 'Mi Control de gasto v1.0.0';
     }
   });
 
