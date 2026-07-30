@@ -5,14 +5,19 @@ import { extname, join } from 'node:path';
 const root = new URL('../', import.meta.url);
 const manifest = JSON.parse(await readFile(new URL('manifest.webmanifest', root), 'utf8'));
 
+assert.equal(manifest.id, './', 'La PWA debe conservar un identificador estable');
 assert.equal(manifest.start_url, './', 'start_url debe ser relativo');
 assert.equal(manifest.scope, './', 'scope debe ser relativo');
 assert.equal(manifest.display, 'standalone');
+assert.equal(manifest.lang, 'es-PE');
+assert.equal(manifest.prefer_related_applications, false);
+assert.ok(manifest.categories.includes('finance'));
 assert.equal(manifest.icons.length, 3);
 
 for (const icon of manifest.icons) {
   assert.match(icon.src, /^\.\/icons\/.+\.svg$/);
   assert.equal(icon.type, 'image/svg+xml');
+  assert.ok(icon.purpose === 'any' || icon.purpose === 'maskable');
 
   const svg = await readFile(new URL(icon.src.slice(2), root), 'utf8');
   assert.match(svg, /^<svg[\s>]/);
@@ -29,6 +34,10 @@ for (const file of referencedFiles) {
 
 const html = await readFile(new URL('index.html', root), 'utf8');
 assert.doesNotMatch(html, /<dialog[^>]*>\s*<form/i, 'El diálogo no debe envolver otros formularios');
+assert.match(html, /interactive-widget=resizes-content/, 'El viewport debe adaptarse al teclado móvil');
+assert.match(html, /apple-mobile-web-app-capable/, 'Debe incluir metadatos para instalación en iPhone');
+assert.match(html, /mobile-web-app-capable/, 'Debe incluir metadatos para instalación móvil');
+assert.match(html, /aria-current="page"/, 'La navegación inicial debe indicar la sección activa');
 assert.match(html, /dashboard-v2\.css/, 'La página debe cargar los estilos del nuevo resumen');
 assert.match(html, /js\/dashboard-v2\.js/, 'La página debe cargar el módulo del nuevo resumen');
 assert.match(html, /movements-v2\.css/, 'La página debe cargar los estilos del historial moderno');
@@ -41,6 +50,8 @@ assert.match(html, /analysis-v2\.css/, 'La página debe cargar los estilos moder
 assert.match(html, /js\/analysis-v2\.js/, 'La página debe cargar el módulo moderno de análisis');
 assert.match(html, /settings-v2\.css/, 'La página debe cargar los estilos modernos de ajustes');
 assert.match(html, /js\/settings-v2\.js/, 'La página debe cargar el módulo moderno de ajustes');
+assert.match(html, /final-polish\.css/, 'La página debe cargar los ajustes finales móviles');
+assert.match(html, /js\/final-polish\.js/, 'La página debe cargar la sincronización accesible final');
 
 const dashboard = await readFile(new URL('js/dashboard-v2.js', root), 'utf8');
 assert.match(dashboard, /data-dashboard-v2="ready"/);
@@ -90,8 +101,21 @@ assert.match(settings, /data-export/);
 assert.match(settings, /data-csv/);
 assert.match(settings, /data-reset/);
 
+const finalPolish = await readFile(new URL('js/final-polish.js', root), 'utf8');
+assert.match(finalPolish, /aria-current/);
+assert.match(finalPolish, /aria-labelledby/);
+assert.match(finalPolish, /themeColor/);
+const finalStyles = await readFile(new URL('final-polish.css', root), 'utf8');
+assert.match(finalStyles, /font-size:16px/, 'Los campos móviles deben evitar zoom automático');
+assert.match(finalStyles, /\.bottom \.primary\{order:0\}/, 'Registrar debe conservar su posición en escritorio');
+
+const uiPolish = await readFile(new URL('js/ui-polish.js', root), 'utf8');
+assert.match(uiPolish, /Mi Control de gasto v1\.0\.0/);
+
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v17/);
+assert.match(serviceWorker, /mi-control-gasto-v18/);
+assert.match(serviceWorker, /request\.mode==='navigate'/);
+assert.match(serviceWorker, /self\.location\.origin/);
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
 assert.match(serviceWorker, /movements-v2\.css/);
@@ -104,6 +128,8 @@ assert.match(serviceWorker, /analysis-v2\.css/);
 assert.match(serviceWorker, /js\/analysis-v2\.js/);
 assert.match(serviceWorker, /settings-v2\.css/);
 assert.match(serviceWorker, /js\/settings-v2\.js/);
+assert.match(serviceWorker, /final-polish\.css/);
+assert.match(serviceWorker, /js\/final-polish\.js/);
 
 const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
@@ -127,4 +153,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: resumen, movimientos, fondos, registro, análisis y ajustes responsive correctos.');
+console.log('Validación PWA completada: versión 1.0.0, navegación accesible, instalación móvil y caché offline correctos.');
