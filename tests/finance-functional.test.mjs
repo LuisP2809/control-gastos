@@ -47,9 +47,23 @@ test('las transferencias cambian fondos pero no ingresos ni gastos', () => {
 
 test('aplica rangos actual, anterior, múltiples meses y personalizado', () => {
   assert.deepEqual(dateRange('previous', '2026-07-15'), { start: '2026-06-01', end: '2026-06-30' });
-  assert.deepEqual(dateRange('3', '2026-07-15'), { start: '2026-05-01', end: '2026-07-15' });
+  assert.deepEqual(dateRange('3', '2026-07-15'), { start: '2026-04-01', end: '2026-07-15' });
   const custom = dateRange('custom', '2026-07-15', { start: '2026-05-05', end: '2026-06-02' });
   assert.deepEqual(inRange(transactions, custom).map(t => t.id), [2, 3, 4]);
+});
+
+test('31 de marzo calcula febrero completo como mes anterior', () => {
+  assert.deepEqual(dateRange('previous', '2025-03-31'), {
+    start: '2025-02-01',
+    end: '2025-02-28',
+  });
+});
+
+test('seis meses desde 31 de agosto comienzan el 1 de febrero', () => {
+  assert.deepEqual(dateRange('6', '2026-08-31'), {
+    start: '2026-02-01',
+    end: '2026-08-31',
+  });
 });
 
 test('genera series mensuales reales y categorías filtradas', () => {
@@ -59,6 +73,14 @@ test('genera series mensuales reales y categorías filtradas', () => {
     { month: '2026-06', income: 300, expense: 50 },
   ]);
   assert.deepEqual(byCategory(inRange(transactions, range)), [['Alimentación', 100], ['Transporte', 50]]);
+});
+
+test('la serie mensual respeta los días exactos de un rango parcial', () => {
+  const range = { start: '2026-05-05', end: '2026-06-02' };
+  assert.deepEqual(monthlySeries(transactions, range), [
+    { month: '2026-05', income: 0, expense: 100 },
+    { month: '2026-06', income: 0, expense: 50 },
+  ]);
 });
 
 test('genera evolución del saldo y omite transferencias del total', () => {
