@@ -9,6 +9,11 @@ function polishInterface() {
       element.textContent = 'Mi Control de gasto v0.3.0';
     }
   });
+
+  document.querySelectorAll('.dashboard-link').forEach(button => {
+    const panelTitle = button.closest('.dashboard-panel')?.querySelector('h3')?.textContent.trim() || 'sección';
+    button.setAttribute('aria-label',`Abrir ${panelTitle}`);
+  });
 }
 
 if (app) {
