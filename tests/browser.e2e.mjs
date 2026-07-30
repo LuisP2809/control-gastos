@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+async function selectValueByText(select, text) {
+  const value = await select.locator('option', { hasText: text }).getAttribute('value');
+  expect(value).not.toBeNull();
+  return value;
+}
+
 async function createFund(page, name, initial) {
   await page.getByRole('button', { name: /Fondos/ }).click();
   await page.getByRole('button', { name: /Nuevo/ }).click();
@@ -25,7 +31,8 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await expect(page.getByText('Deporte', { exact: true })).toHaveCount(1);
 
   await page.getByRole('button', { name: /Registrar/ }).click();
-  await page.locator('#transactionForm [name=fund]').selectOption({ label: /Deporte/ });
+  const expenseFund = page.locator('#transactionForm [name=fund]');
+  await expenseFund.selectOption(await selectValueByText(expenseFund, 'Deporte'));
   await page.locator('#transactionForm [name=amount]').fill('300');
   await page.locator('#transactionForm [name=description]').fill('Compra deportiva');
   await page.locator('#transactionForm button').dblclick();
@@ -39,7 +46,8 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await expect(page.locator('.movement .amount')).toContainText('S/ 30.00');
   await page.getByRole('button', { name: 'Ver' }).click();
   await page.locator('#editTransaction [name=category]').selectOption({ label: 'Transporte' });
-  await page.locator('#editTransaction [name=fund]').selectOption({ label: /Mi dinero/ });
+  const editFund = page.locator('#editTransaction [name=fund]');
+  await editFund.selectOption(await selectValueByText(editFund, 'Mi dinero'));
   await page.locator('#editTransaction [name=description]').fill('Descripción actualizada');
   await page.locator('#editTransaction button[type=submit]').click();
   await page.getByRole('button', { name: /Inicio/ }).click();
@@ -68,8 +76,8 @@ test('al invertir una transferencia no se reutiliza el saldo del movimiento anti
 
   const from = page.locator('#transactionForm [name=from]');
   const to = page.locator('#transactionForm [name=to]');
-  const fundA = await from.locator('option', { hasText: 'Fondo A' }).getAttribute('value');
-  const fundB = await from.locator('option', { hasText: 'Fondo B' }).getAttribute('value');
+  const fundA = await selectValueByText(from, 'Fondo A');
+  const fundB = await selectValueByText(from, 'Fondo B');
   await from.selectOption(fundA);
   await to.selectOption(fundB);
   await page.locator('#transactionForm [name=amount]').fill('200');
