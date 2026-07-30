@@ -58,6 +58,26 @@ function syncChrome() {
   }
 }
 
+function showToast(message) {
+  const toast = document.querySelector('#toast');
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return null;
+  const current = await navigator.serviceWorker.getRegistration();
+  return current || navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'});
+}
+
+const serviceWorkerRegistration = document.readyState === 'complete'
+  ? registerServiceWorker()
+  : new Promise((resolve,reject) => {
+      addEventListener('load',() => registerServiceWorker().then(resolve,reject),{once:true});
+    });
+
 if (app && navigation) {
   new MutationObserver(scheduleChromeSync).observe(app, { childList: true, subtree: true });
   new MutationObserver(scheduleChromeSync).observe(navigation, { attributes: true, subtree: true, attributeFilter: ['class'] });
@@ -69,3 +89,25 @@ if (app && navigation) {
   addEventListener('pageshow', scheduleChromeSync);
   scheduleChromeSync();
 }
+
+document.addEventListener('click',async event => {
+  const button = event.target.closest('button[data-update]');
+  if (!button) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  button.disabled = true;
+  const label = button.textContent;
+  button.textContent = 'Buscando…';
+  try {
+    const registration = await serviceWorkerRegistration;
+    if (!registration) throw new Error('El navegador no admite modo sin conexión.');
+    await registration.update();
+    if (registration.waiting) registration.waiting.postMessage({type:'SKIP_WAITING'});
+    else showToast('Búsqueda de actualización completada');
+  } catch (error) {
+    alert(`No se pudo buscar la actualización: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    button.disabled = false;
+    button.textContent = label;
+  }
+},true);
