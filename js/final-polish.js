@@ -26,11 +26,13 @@ function scheduleChromeSync() {
 
 function syncChrome() {
   const heading = app?.querySelector('h2');
+  const activeButton = navigation?.querySelector('button[data-page].active');
+  const pageTitle = pageNames[activeButton?.dataset.page] || heading?.textContent.trim() || 'Mi Control de gasto';
   if (heading) {
     heading.id = 'page-title';
     app.setAttribute('aria-labelledby', heading.id);
-    document.title = `${heading.textContent.trim()} · Mi Control de gasto`;
   }
+  document.title = `${pageTitle} · Mi Control de gasto`;
 
   navigation?.querySelectorAll('button[data-page]').forEach(button => {
     button.type = 'button';
