@@ -1,5 +1,5 @@
 const app = document.querySelector('#app');
-const VERSION_LABEL = 'Mi Control de gasto v1.1.0';
+const VERSION_LABEL = 'Mi Control de gasto v1.1.1';
 
 function polishInterface() {
   const title = document.querySelector('.pagehead h2');

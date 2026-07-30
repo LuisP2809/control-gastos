@@ -130,13 +130,15 @@ assert.match(finalPolish, /registerServiceWorker/);
 const finalStyles = await readFile(new URL('final-polish.css', root), 'utf8');
 assert.match(finalStyles, /font-size:16px/, 'Los campos móviles deben evitar zoom automático');
 assert.match(finalStyles, /\.bottom \.primary\{order:0\}/, 'Registrar debe conservar su posición en escritorio');
+assert.match(finalStyles, /\.dashboard-goals-panel\{grid-column:1\/-1!important\}/, 'Metas no debe crear columnas implícitas en el resumen');
+assert.match(finalStyles, /\.summary-panels>\.dashboard-panel\{grid-column:1\/-1!important/, 'Cada panel móvil debe ocupar el ancho completo');
 
 const uiPolish = await readFile(new URL('js/ui-polish.js', root), 'utf8');
-assert.match(uiPolish, /Mi Control de gasto v1\.1\.0/);
+assert.match(uiPolish, /Mi Control de gasto v1\.1\.1/);
 assert.match(uiPolish, /text !== VERSION_LABEL/, 'La versión no debe provocar un ciclo de renderizado');
 
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v19/);
+assert.match(serviceWorker, /mi-control-gasto-v20/);
 assert.match(serviceWorker, /request\.mode==='navigate'/);
 assert.match(serviceWorker, /self\.location\.origin/);
 assert.match(serviceWorker, /outdated\.length>0/, 'La primera instalación no debe recargar la página actual');
@@ -179,4 +181,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: versión 1.1.0, metas de ahorro, disponible real y caché offline correctos.');
+console.log('Validación PWA completada: versión 1.1.1, metas de ahorro, responsive móvil y caché offline correctos.');
