@@ -1,6 +1,7 @@
 const app = document.querySelector('#app');
 const navigation = document.querySelector('.bottom');
 const themeButton = document.querySelector('#themeQuick');
+const themeColor = document.querySelector('#themeColor');
 const modal = document.querySelector('#modal');
 
 const pageNames = {
@@ -40,12 +41,13 @@ function syncChrome() {
     if (!button.hasAttribute('aria-label')) button.setAttribute('aria-label', label);
   });
 
+  const dark = document.documentElement.classList.contains('dark');
   if (themeButton) {
-    const dark = document.documentElement.classList.contains('dark');
     themeButton.type = 'button';
     themeButton.setAttribute('aria-pressed', String(dark));
     themeButton.title = dark ? 'Usando tema oscuro' : 'Usando tema claro';
   }
+  if (themeColor) themeColor.content = dark ? '#090d18' : '#f3f5fb';
 
   if (modal?.open) {
     modal.setAttribute('aria-modal', 'true');
