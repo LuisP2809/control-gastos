@@ -12,8 +12,8 @@ async function createFund(page, name, initial) {
 
 test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByText('Mi dinero').first()).toBeVisible();
   await page.getByRole('button', { name: /Fondos/ }).click();
+  await expect(page.getByText('Mi dinero').first()).toBeVisible();
   await page.getByRole('button', { name: /Nuevo/ }).click();
   await page.locator('#fundForm [name=name]').fill('Deporte');
   await page.locator('#fundForm [name=type]').selectOption({ label: 'Dinero propio' });
@@ -84,12 +84,17 @@ test('al invertir una transferencia no se reutiliza el saldo del movimiento anti
   await editForm.locator('[name=from]').selectOption(fundB);
   await editForm.locator('[name=to]').selectOption(fundA);
   await editForm.locator('[name=amount]').fill('100');
+  await page.evaluate(() => {
+    window.__confirmMessages = [];
+    window.confirm = message => {
+      window.__confirmMessages.push(String(message));
+      return false;
+    };
+  });
 
-  const dialogPromise = page.waitForEvent('dialog');
   await editForm.locator('button[type=submit]').click();
-  const dialog = await dialogPromise;
-  expect(dialog.message()).toContain('El monto supera el saldo de Fondo B');
-  await dialog.dismiss();
+  await expect.poll(() => page.evaluate(() => window.__confirmMessages.join('\n')))
+    .toContain('El monto supera el saldo de Fondo B');
 
   await expect(editForm).toBeVisible();
   await page.getByRole('button', { name: 'Cerrar' }).click();
