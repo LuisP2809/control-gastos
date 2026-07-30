@@ -30,6 +30,14 @@ Abre `http://localhost:8080`. Para instalarla, usa **Instalar aplicación** en e
 
 Todas las URLs son relativas, por lo que la aplicación funciona dentro de `/control-gastos/`. El archivo `.nojekyll` evita transformaciones de Jekyll.
 
+## Validación
+
+Ejecuta la comprobación automatizada del manifest, las rutas para GitHub Pages, los iconos SVG y la ausencia de archivos binarios:
+
+```bash
+node tests/validate-pwa.mjs
+```
+
 ## Privacidad y respaldos
 
 Los datos viven solamente en IndexedDB del navegador. Borrar los datos del sitio también elimina la información. Usa **Ajustes → Exportar copia JSON** con regularidad y conserva el archivo en un lugar seguro. El repositorio no contiene datos financieros.
