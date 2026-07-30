@@ -1,4 +1,5 @@
 const CACHE='mi-control-gasto-v18';
+const CACHE_PREFIX='mi-control-gasto-';
 const ASSETS=['./','./index.html','./styles.css','./dashboard-v2.css','./movements-v2.css','./funds-v2.css','./register-v2.css','./analysis-v2.css','./settings-v2.css','./final-polish.css','./manifest.webmanifest','./js/app.js','./js/transaction-edit-fix.js','./js/ui-polish.js','./js/dashboard-v2.js','./js/movements-v2.js','./js/funds-v2.js','./js/register-v2.js','./js/analysis-v2.js','./js/settings-v2.js','./js/final-polish.js','./js/db.js','./js/calculations.js','./js/charts.js','./icons/icon-192.svg','./icons/icon-512.svg','./icons/icon-maskable-512.svg'];
 
 self.addEventListener('install',event=>event.waitUntil(
@@ -6,9 +7,11 @@ self.addEventListener('install',event=>event.waitUntil(
 ));
 
 self.addEventListener('activate',event=>event.waitUntil(
-  caches.keys()
-    .then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key))))
-    .then(()=>self.clients.claim())
+  caches.keys().then(async keys=>{
+    const outdated=keys.filter(key=>key.startsWith(CACHE_PREFIX)&&key!==CACHE);
+    await Promise.all(outdated.map(key=>caches.delete(key)));
+    if(outdated.length>0)await self.clients.claim();
+  })
 ));
 
 self.addEventListener('fetch',event=>{
