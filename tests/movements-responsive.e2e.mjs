@@ -19,11 +19,13 @@ async function createFund(page,name,initial) {
 async function registerMovement(page,{type,amount,description,fundName}) {
   await page.getByRole('button',{name:/Registrar/}).click();
   await page.getByRole('button',{name:type === 'expense' ? 'Gasto' : 'Ingreso',exact:true}).click();
-  const fund = page.locator('#transactionForm [name=fund]');
+  const form = page.locator('#transactionForm');
+  const fund = form.locator('[name=fund]');
   await fund.selectOption(await selectValueByText(fund,fundName));
-  await page.locator('#transactionForm [name=amount]').fill(String(amount));
-  await page.locator('#transactionForm [name=description]').fill(description);
-  await page.locator('#transactionForm button').click();
+  await form.locator('[name=amount]').fill(String(amount));
+  await form.locator('[name=description]').fill(description);
+  await form.locator('button').click();
+  await expect(form).toHaveCount(0);
 }
 
 test('movimientos filtra correctamente y no se distorsiona',async({page}) => {
