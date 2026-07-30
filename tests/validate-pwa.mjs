@@ -105,17 +105,20 @@ const finalPolish = await readFile(new URL('js/final-polish.js', root), 'utf8');
 assert.match(finalPolish, /aria-current/);
 assert.match(finalPolish, /aria-labelledby/);
 assert.match(finalPolish, /themeColor/);
+assert.match(finalPolish, /registerServiceWorker/);
 const finalStyles = await readFile(new URL('final-polish.css', root), 'utf8');
 assert.match(finalStyles, /font-size:16px/, 'Los campos móviles deben evitar zoom automático');
 assert.match(finalStyles, /\.bottom \.primary\{order:0\}/, 'Registrar debe conservar su posición en escritorio');
 
 const uiPolish = await readFile(new URL('js/ui-polish.js', root), 'utf8');
 assert.match(uiPolish, /Mi Control de gasto v1\.0\.0/);
+assert.match(uiPolish, /text !== VERSION_LABEL/, 'La versión no debe provocar un ciclo de renderizado');
 
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
 assert.match(serviceWorker, /mi-control-gasto-v18/);
 assert.match(serviceWorker, /request\.mode==='navigate'/);
 assert.match(serviceWorker, /self\.location\.origin/);
+assert.match(serviceWorker, /outdated\.length>0/, 'La primera instalación no debe recargar la página actual');
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
 assert.match(serviceWorker, /movements-v2\.css/);
