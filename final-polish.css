@@ -15,6 +15,14 @@ input[type="checkbox"],input[type="radio"]{min-height:auto}
 dialog{overscroll-behavior:contain}
 .sr{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 
+/* La tarjeta de metas debe ocupar las columnas existentes, no crear columnas implícitas. */
+.dashboard-goals-panel{grid-column:1/-1!important}
+
+@media(max-width:759px){
+  .summary-panels{grid-template-columns:minmax(0,1fr)!important}
+  .summary-panels>.dashboard-panel{grid-column:1/-1!important;width:100%;max-width:100%}
+}
+
 @media(max-width:767px){
   input,select,textarea{font-size:16px}
   .btn{min-height:var(--tap-size)}
