@@ -39,6 +39,8 @@ assert.match(html, /register-v2\.css/, 'La página debe cargar los estilos moder
 assert.match(html, /js\/register-v2\.js/, 'La página debe cargar el módulo moderno de registro');
 assert.match(html, /analysis-v2\.css/, 'La página debe cargar los estilos modernos de análisis');
 assert.match(html, /js\/analysis-v2\.js/, 'La página debe cargar el módulo moderno de análisis');
+assert.match(html, /settings-v2\.css/, 'La página debe cargar los estilos modernos de ajustes');
+assert.match(html, /js\/settings-v2\.js/, 'La página debe cargar el módulo moderno de ajustes');
 
 const dashboard = await readFile(new URL('js/dashboard-v2.js', root), 'utf8');
 assert.match(dashboard, /data-dashboard-v2="ready"/);
@@ -76,8 +78,20 @@ assert.match(analysis, /id="analysisRange"/);
 assert.match(analysis, /id="analysisStart"/);
 assert.match(analysis, /id="analysisEnd"/);
 
+const settings = await readFile(new URL('js/settings-v2.js', root), 'utf8');
+assert.match(settings, /data-settings-v2="ready"/);
+assert.match(settings, /id="settingsForm"/);
+assert.match(settings, /name="monthlyLimit"/);
+assert.match(settings, /name="warning"/);
+assert.match(settings, /name="critical"/);
+assert.match(settings, /name="theme"/);
+assert.match(settings, /id="importFile"/);
+assert.match(settings, /data-export/);
+assert.match(settings, /data-csv/);
+assert.match(settings, /data-reset/);
+
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v16/);
+assert.match(serviceWorker, /mi-control-gasto-v17/);
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
 assert.match(serviceWorker, /movements-v2\.css/);
@@ -88,6 +102,8 @@ assert.match(serviceWorker, /register-v2\.css/);
 assert.match(serviceWorker, /js\/register-v2\.js/);
 assert.match(serviceWorker, /analysis-v2\.css/);
 assert.match(serviceWorker, /js\/analysis-v2\.js/);
+assert.match(serviceWorker, /settings-v2\.css/);
+assert.match(serviceWorker, /js\/settings-v2\.js/);
 
 const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
@@ -111,4 +127,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: resumen, movimientos, fondos, registro y análisis responsive correctos.');
+console.log('Validación PWA completada: resumen, movimientos, fondos, registro, análisis y ajustes responsive correctos.');
