@@ -35,6 +35,8 @@ assert.match(html, /movements-v2\.css/, 'La página debe cargar los estilos del 
 assert.match(html, /js\/movements-v2\.js/, 'La página debe cargar el módulo del historial moderno');
 assert.match(html, /funds-v2\.css/, 'La página debe cargar los estilos modernos de fondos');
 assert.match(html, /js\/funds-v2\.js/, 'La página debe cargar el módulo moderno de fondos');
+assert.match(html, /register-v2\.css/, 'La página debe cargar los estilos modernos de registro');
+assert.match(html, /js\/register-v2\.js/, 'La página debe cargar el módulo moderno de registro');
 
 const dashboard = await readFile(new URL('js/dashboard-v2.js', root), 'utf8');
 assert.match(dashboard, /data-dashboard-v2="ready"/);
@@ -54,14 +56,24 @@ assert.match(funds, /fund-card-grid/);
 assert.match(funds, /data-editfund/);
 assert.match(funds, /data-delfund/);
 
+const register = await readFile(new URL('js/register-v2.js', root), 'utf8');
+assert.match(register, /data-register-v2="ready"/);
+assert.match(register, /id="transactionForm"/);
+assert.match(register, /data-quick-amount/);
+assert.match(register, /data-register-preview/);
+assert.match(register, /name="from"/);
+assert.match(register, /name="to"/);
+
 const serviceWorker = await readFile(new URL('sw.js', root), 'utf8');
-assert.match(serviceWorker, /mi-control-gasto-v14/);
+assert.match(serviceWorker, /mi-control-gasto-v15/);
 assert.match(serviceWorker, /dashboard-v2\.css/);
 assert.match(serviceWorker, /js\/dashboard-v2\.js/);
 assert.match(serviceWorker, /movements-v2\.css/);
 assert.match(serviceWorker, /js\/movements-v2\.js/);
 assert.match(serviceWorker, /funds-v2\.css/);
 assert.match(serviceWorker, /js\/funds-v2\.js/);
+assert.match(serviceWorker, /register-v2\.css/);
+assert.match(serviceWorker, /js\/register-v2\.js/);
 
 const app = await readFile(new URL('js/app.js', root), 'utf8');
 assert.doesNotMatch(app, /toISOString\s*\(/, 'Las fechas de la aplicación no deben depender de UTC');
@@ -85,4 +97,4 @@ async function assertTextOnly(directory = '.') {
 }
 
 await assertTextOnly();
-console.log('Validación PWA completada: rutas, dashboard, movimientos, fondos responsive, SVG y archivos de texto correctos.');
+console.log('Validación PWA completada: rutas, dashboard, movimientos, fondos, registro responsive, SVG y archivos de texto correctos.');
