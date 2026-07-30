@@ -1,6 +1,6 @@
-const CACHE='mi-control-gasto-v18';
+const CACHE='mi-control-gasto-v19';
 const CACHE_PREFIX='mi-control-gasto-';
-const ASSETS=['./','./index.html','./styles.css','./dashboard-v2.css','./movements-v2.css','./funds-v2.css','./register-v2.css','./analysis-v2.css','./settings-v2.css','./final-polish.css','./manifest.webmanifest','./js/app.js','./js/transaction-edit-fix.js','./js/ui-polish.js','./js/dashboard-v2.js','./js/movements-v2.js','./js/funds-v2.js','./js/register-v2.js','./js/analysis-v2.js','./js/settings-v2.js','./js/final-polish.js','./js/db.js','./js/calculations.js','./js/charts.js','./icons/icon-192.svg','./icons/icon-512.svg','./icons/icon-maskable-512.svg'];
+const ASSETS=['./','./index.html','./styles.css','./dashboard-v2.css','./movements-v2.css','./funds-v2.css','./goals-v1.css','./register-v2.css','./analysis-v2.css','./settings-v2.css','./final-polish.css','./manifest.webmanifest','./js/app.js','./js/transaction-edit-fix.js','./js/ui-polish.js','./js/dashboard-v2.js','./js/movements-v2.js','./js/funds-v2.js','./js/goals-v1.js','./js/register-v2.js','./js/analysis-v2.js','./js/settings-v2.js','./js/final-polish.js','./js/db.js','./js/calculations.js','./js/charts.js','./icons/icon-192.svg','./icons/icon-512.svg','./icons/icon-maskable-512.svg'];
 
 self.addEventListener('install',event=>event.waitUntil(
   caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())
