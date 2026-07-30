@@ -1,65 +1,52 @@
-import * as db from './db.js';
-import { money, summary } from './calculations.js';
-
 const app = document.querySelector('#app');
-let enhancing = false;
 let scheduled = false;
 
 function scheduleEnhancement() {
   if (scheduled) return;
   scheduled = true;
-  queueMicrotask(async () => {
+  queueMicrotask(() => {
     scheduled = false;
-    await enhanceSettings();
+    enhanceSettings();
   });
 }
 
-async function enhanceSettings() {
-  if (!app || enhancing) return;
+function enhanceSettings() {
+  if (!app) return false;
   const page = app.querySelector('.page');
   const title = page?.querySelector('.pagehead h2')?.textContent.trim();
-  if (!page || title !== 'Ajustes' || page.dataset.settingsV2 === 'ready' || page.dataset.settingsV2 === 'loading') return;
+  if (!page || title !== 'Ajustes' || page.dataset.settingsV2 === 'ready') return false;
 
-  page.dataset.settingsV2 = 'loading';
-  enhancing = true;
-  try {
-    const originalImport = page.querySelector('#importFile');
-    const [settings, funds, transactions] = await Promise.all([
-      db.get('settings','main'),
-      db.all('funds'),
-      db.all('transactions'),
-    ]);
-    if (!page.isConnected) return;
+  const originalForm = page.querySelector('#settingsForm');
+  if (!originalForm) return false;
+  const originalImport = page.querySelector('#importFile');
+  const monthlyLimit = Math.max(0, Number(originalForm.elements.monthlyLimit?.value) || 0);
+  const warning = clamp(Number(originalForm.elements.warning?.value) || 70, 1, 99);
+  const critical = clamp(Number(originalForm.elements.critical?.value) || 90, 1, 100);
+  const theme = ['auto','light','dark'].includes(originalForm.elements.theme?.value) ? originalForm.elements.theme.value : 'auto';
 
-    const totals = summary(funds, transactions);
-    const template = document.createElement('template');
-    template.innerHTML = renderSettings(settings, funds, transactions, totals).trim();
-    const next = template.content.firstElementChild;
-    if (!next) throw new Error('No se pudo crear la estructura visual de Ajustes.');
-    const placeholder = next.querySelector('#importFile');
-    if (originalImport && placeholder) {
-      originalImport.className = 'sr';
-      originalImport.setAttribute('accept','application/json');
-      placeholder.replaceWith(originalImport);
-    }
-    page.replaceWith(next);
-    bindSettings(next, totals.expense);
-  } catch (error) {
-    if (page.isConnected) delete page.dataset.settingsV2;
-    console.error('No se pudo construir la pantalla de ajustes.', error);
-  } finally {
-    enhancing = false;
+  const template = document.createElement('template');
+  template.innerHTML = renderSettings({ monthlyLimit, warning, critical, theme }).trim();
+  const next = template.content.firstElementChild;
+  if (!next) return false;
+
+  const placeholder = next.querySelector('#importFile');
+  if (originalImport && placeholder) {
+    originalImport.className = 'sr';
+    originalImport.setAttribute('accept','application/json');
+    placeholder.replaceWith(originalImport);
   }
+
+  page.replaceWith(next);
+  bindSettings(next);
+  return true;
 }
 
-function renderSettings(settings, funds, transactions, totals) {
-  const monthlyLimit = Math.max(0, Number(settings?.monthlyLimit) || 0);
-  const warning = clamp(Number(settings?.warning) || 70, 1, 99);
-  const critical = clamp(Number(settings?.critical) || 90, 1, 100);
-  const theme = ['auto','light','dark'].includes(settings?.theme) ? settings.theme : 'auto';
-  const usedPct = monthlyLimit > 0 ? totals.expense / monthlyLimit * 100 : 0;
-  const remaining = monthlyLimit - totals.expense;
+function waitForSettings(attempt = 0) {
+  if (enhanceSettings()) return;
+  if (attempt < 40) setTimeout(() => waitForSettings(attempt + 1), 25);
+}
 
+function renderSettings({ monthlyLimit, warning, critical, theme }) {
   return `<section class="page settings-v2" data-settings-v2="ready">
     <header class="settings-header">
       <div><h2>Ajustes</h2><p>Personaliza tu presupuesto y administra tus datos locales.</p></div>
@@ -68,9 +55,9 @@ function renderSettings(settings, funds, transactions, totals) {
 
     <div class="settings-stats">
       ${stat('◎','Presupuesto mensual',money(monthlyLimit),'Límite general configurado','budget')}
-      ${stat('↘','Gastado este mes',money(totals.expense),`${Math.min(usedPct,999).toFixed(0)}% del presupuesto`,'spent')}
       ${stat('◷','Primera alerta',`${warning}%`,'Aviso preventivo','warning')}
-      ${stat('!','Alerta crítica',`${critical}%`,`${funds.length} fondos · ${transactions.length} movimientos`,'critical')}
+      ${stat('!','Alerta crítica',`${critical}%`,'Aviso antes de superar el límite','critical')}
+      ${stat('S/','Moneda','PEN','Sol peruano','currency')}
     </div>
 
     <div class="settings-layout">
@@ -86,10 +73,10 @@ function renderSettings(settings, funds, transactions, totals) {
             <div class="settings-field full"><label for="settingsCurrency">Moneda</label><select id="settingsCurrency" disabled><option>Sol peruano (PEN)</option></select></div>
           </div>
           <div class="budget-preview" data-budget-preview>
-            <div class="budget-preview-top"><span>Uso actual del presupuesto</span><strong data-budget-summary>${money(totals.expense)} de ${money(monthlyLimit)}</strong></div>
-            <div class="budget-track"><i data-budget-fill style="width:${Math.min(Math.max(usedPct,0),100)}%"></i><span class="budget-marker" data-warning-marker data-label="Alerta" style="left:${warning}%"></span><span class="budget-marker" data-critical-marker data-label="Crítica" style="left:${critical}%"></span></div>
-            <div class="budget-caption"><span data-budget-used>${Math.min(usedPct,999).toFixed(0)}% utilizado</span><span data-budget-remaining>${remaining >= 0 ? `${money(remaining)} disponibles` : `${money(Math.abs(remaining))} excedidos`}</span></div>
-            <p class="settings-validation muted" data-settings-validation>La primera advertencia debe ser menor que la crítica.</p>
+            <div class="budget-preview-top"><span>Configuración de alertas</span><strong data-budget-summary>${money(monthlyLimit)} al mes</strong></div>
+            <div class="budget-track"><i data-budget-fill style="width:${warning}%"></i><span class="budget-marker" data-warning-marker data-label="Alerta" style="left:${warning}%"></span><span class="budget-marker" data-critical-marker data-label="Crítica" style="left:${critical}%"></span></div>
+            <div class="budget-caption"><span data-budget-used>Aviso al ${warning}%</span><span data-budget-remaining>Crítica al ${critical}%</span></div>
+            <p class="settings-validation muted" data-settings-validation>Las alertas están ordenadas correctamente.</p>
           </div>
         </article>
 
@@ -134,30 +121,28 @@ function renderSettings(settings, funds, transactions, totals) {
   </section>`;
 }
 
-function bindSettings(root, currentExpense) {
+function bindSettings(root) {
   const form = root.querySelector('#settingsForm');
   if (!form) return;
-  const update = () => updateBudgetPreview(form, currentExpense);
+  const update = () => updateBudgetPreview(form);
   form.addEventListener('input', update);
   form.addEventListener('change', update);
   update();
 }
 
-function updateBudgetPreview(form, currentExpense) {
+function updateBudgetPreview(form) {
   const limit = Math.max(0, Number(form.elements.monthlyLimit.value) || 0);
   const warning = clamp(Number(form.elements.warning.value) || 0, 0, 100);
   const critical = clamp(Number(form.elements.critical.value) || 0, 0, 100);
-  const pct = limit > 0 ? currentExpense / limit * 100 : 0;
-  const remaining = limit - currentExpense;
   const root = form.closest('.settings-v2');
   if (!root) return;
 
-  root.querySelector('[data-budget-fill]').style.width = `${Math.min(Math.max(pct,0),100)}%`;
+  root.querySelector('[data-budget-fill]').style.width = `${warning}%`;
   root.querySelector('[data-warning-marker]').style.left = `${warning}%`;
   root.querySelector('[data-critical-marker]').style.left = `${critical}%`;
-  root.querySelector('[data-budget-summary]').textContent = `${money(currentExpense)} de ${money(limit)}`;
-  root.querySelector('[data-budget-used]').textContent = `${Math.min(pct,999).toFixed(0)}% utilizado`;
-  root.querySelector('[data-budget-remaining]').textContent = remaining >= 0 ? `${money(remaining)} disponibles` : `${money(Math.abs(remaining))} excedidos`;
+  root.querySelector('[data-budget-summary]').textContent = `${money(limit)} al mes`;
+  root.querySelector('[data-budget-used]').textContent = `Aviso al ${warning}%`;
+  root.querySelector('[data-budget-remaining]').textContent = `Crítica al ${critical}%`;
   root.querySelector('[data-stat="budget"] strong').textContent = money(limit);
   root.querySelector('[data-stat="warning"] strong').textContent = `${warning}%`;
   root.querySelector('[data-stat="critical"] strong').textContent = `${critical}%`;
@@ -180,6 +165,10 @@ function actionButton(attribute, icon, label, description, extraClass='') {
   return `<button type="button" class="settings-action ${extraClass}" ${attribute}><span>${icon}</span><span><strong>${label}</strong><small>${description}</small></span><span>›</span></button>`;
 }
 
+function money(value) {
+  return new Intl.NumberFormat('es-PE',{style:'currency',currency:'PEN',minimumFractionDigits:2}).format(Number(value)||0).replace('PEN','S/');
+}
+
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, Number(value) || 0));
 }
@@ -187,7 +176,7 @@ function clamp(value, min, max) {
 if (app) {
   new MutationObserver(scheduleEnhancement).observe(app,{childList:true,subtree:true});
   document.querySelector('.bottom')?.addEventListener('click', event => {
-    if (event.target.closest('[data-page="settings"]')) setTimeout(scheduleEnhancement,0);
+    if (event.target.closest('[data-page="settings"]')) setTimeout(() => waitForSettings(), 0);
   });
   scheduleEnhancement();
 }
