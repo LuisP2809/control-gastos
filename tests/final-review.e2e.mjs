@@ -48,6 +48,11 @@ test('revisión final de navegación, accesibilidad y funcionamiento offline', a
   await page.locator('.bottom button[data-page="home"]').click();
   await expect(page.locator('.dashboard-v2')).toBeVisible();
   await page.evaluate(() => navigator.serviceWorker.ready);
+  const controlled = await page.evaluate(() => Boolean(navigator.serviceWorker.controller));
+  if (!controlled) {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expect(page.locator('.dashboard-v2')).toBeVisible();
+  }
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBeTruthy();
 
   await context.setOffline(true);
