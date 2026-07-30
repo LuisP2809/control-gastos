@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 
+async function createFund(page, name, initial) {
+  await page.getByRole('button', { name: /Fondos/ }).click();
+  await page.getByRole('button', { name: /Nuevo/ }).click();
+  await page.locator('#fundForm [name=name]').fill(name);
+  await page.locator('#fundForm [name=type]').selectOption({ label: 'Dinero propio' });
+  await page.locator('#fundForm [name=initial]').fill(String(initial));
+  await page.locator('#fundForm button[type=submit]').click();
+  await expect(page.getByText('Fondo guardado correctamente')).toBeVisible();
+}
+
 test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByText('Mi dinero').first()).toBeVisible();
@@ -46,4 +56,47 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await page.locator('#fundForm button[type=submit]').click();
   await page.evaluate(() => window.__restoreIDB());
   await expect(page.locator('#fundForm button[type=submit]')).toBeEnabled();
+});
+
+test('al invertir una transferencia no se reutiliza el saldo del movimiento antiguo', async ({ page }) => {
+  await page.goto('/');
+  await createFund(page, 'Fondo A', 500);
+  await createFund(page, 'Fondo B', 0);
+
+  await page.getByRole('button', { name: /Registrar/ }).click();
+  await page.getByRole('button', { name: 'Transferencia', exact: true }).click();
+
+  const from = page.locator('#transactionForm [name=from]');
+  const to = page.locator('#transactionForm [name=to]');
+  const fundA = await from.locator('option', { hasText: 'Fondo A' }).getAttribute('value');
+  const fundB = await from.locator('option', { hasText: 'Fondo B' }).getAttribute('value');
+  await from.selectOption(fundA);
+  await to.selectOption(fundB);
+  await page.locator('#transactionForm [name=amount]').fill('200');
+  await page.locator('#transactionForm [name=description]').fill('Transferencia A B');
+  await page.locator('#transactionForm button').click();
+
+  await page.getByRole('button', { name: /Movimientos/ }).click();
+  const originalMovement = page.locator('.movement').filter({ hasText: 'Transferencia A B' });
+  await originalMovement.getByRole('button', { name: 'Ver' }).click();
+
+  const editForm = page.locator('#editTransaction');
+  await editForm.locator('[name=from]').selectOption(fundB);
+  await editForm.locator('[name=to]').selectOption(fundA);
+  await editForm.locator('[name=amount]').fill('100');
+
+  const dialogPromise = page.waitForEvent('dialog');
+  await editForm.locator('button[type=submit]').click();
+  const dialog = await dialogPromise;
+  expect(dialog.message()).toContain('El monto supera el saldo de Fondo B');
+  await dialog.dismiss();
+
+  await expect(editForm).toBeVisible();
+  await page.getByRole('button', { name: 'Cerrar' }).click();
+  await page.reload();
+  await page.getByRole('button', { name: /Movimientos/ }).click();
+
+  const unchangedMovement = page.locator('.movement').filter({ hasText: 'Transferencia A B' });
+  await expect(unchangedMovement).toContainText('Fondo A → Fondo B');
+  await expect(unchangedMovement.locator('.amount')).toContainText('S/ 200.00');
 });
