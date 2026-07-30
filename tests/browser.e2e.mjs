@@ -8,6 +8,7 @@ async function selectValueByText(select, text) {
 
 async function createFund(page, name, initial) {
   await page.getByRole('button', { name: /Fondos/ }).click();
+  await expect(page.locator('.funds-v2')).toBeVisible();
   await page.getByRole('button', { name: /Nuevo/ }).click();
   await page.locator('#fundForm [name=name]').fill(name);
   await page.locator('#fundForm [name=type]').selectOption({ label: 'Dinero propio' });
@@ -19,7 +20,8 @@ async function createFund(page, name, initial) {
 test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: /Fondos/ }).click();
-  await expect(page.getByText('Mi dinero').first()).toBeVisible();
+  await expect(page.locator('.funds-v2')).toBeVisible();
+  await expect(page.locator('.fund-v2-card:not([hidden])').filter({ hasText: 'Mi dinero' })).toBeVisible();
   await page.getByRole('button', { name: /Nuevo/ }).click();
   await page.locator('#fundForm [name=name]').fill('Deporte');
   await page.locator('#fundForm [name=type]').selectOption({ label: 'Dinero propio' });
@@ -28,6 +30,7 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await expect(page.getByText('Fondo guardado correctamente')).toBeVisible();
   await page.reload();
   await page.getByRole('button', { name: /Fondos/ }).click();
+  await expect(page.locator('.funds-v2')).toBeVisible();
   await expect(page.getByText('Deporte', { exact: true })).toHaveCount(1);
 
   await page.getByRole('button', { name: /Registrar/ }).click();
@@ -55,6 +58,7 @@ test('fondos y edición de gastos persisten realmente en IndexedDB', async ({ pa
   await page.getByRole('button', { name: /Inicio/ }).click();
   await expect(page.getByText('S/ 30.00').first()).toBeVisible();
   await page.getByRole('button', { name: /Fondos/ }).click();
+  await expect(page.locator('.funds-v2')).toBeVisible();
   await expect(page.locator('.fund').filter({ hasText: 'Deporte' })).toContainText('S/ 500.00');
   await expect(page.locator('.fund').filter({ hasText: 'Mi dinero' })).toContainText('-S/ 30.00');
 
