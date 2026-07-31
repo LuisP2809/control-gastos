@@ -92,7 +92,8 @@ test('retirar ahorro libera disponible y devolver dinero ajeno conserva el dispo
   let form = page.locator('#separateForm');
   await form.locator('[name="accountId"]').selectOption('account-yape');
   await form.locator('[name="amount"]').fill('600');
-  await form.locator('[name="kind"][value="external"]').check();
+  await form.locator('label').filter({ hasText: 'Dinero ajeno' }).click();
+  await expect(form.locator('[name="kind"][value="external"]')).toBeChecked();
   await form.locator('[name="owner"]').fill('Mamá');
   await form.getByRole('button', { name: 'Separar dinero' }).click();
 
