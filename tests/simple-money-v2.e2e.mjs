@@ -1,17 +1,47 @@
 import { test, expect } from '@playwright/test';
 
-async function configureCurrentMoney(page, { yape=2000, cash=1000, bank=1000 } = {}) {
+async function configureCurrentMoney(page, { yape = 2000, cash = 1000, bank = 1000 } = {}) {
   await page.getByRole('button', { name: 'Configurar mi dinero actual' }).click();
   const form = page.locator('#balanceSetupForm');
-  await form.getByLabel('Yape').fill(String(yape));
-  await form.getByLabel('Efectivo').fill(String(cash));
-  await form.getByLabel('Cuenta bancaria').fill(String(bank));
+  const entries = [
+    ['#balance-account-yape', yape],
+    ['#balance-account-cash', cash],
+    ['#balance-account-bank', bank],
+  ];
+  for (const [selector, value] of entries) {
+    const input = form.locator(selector);
+    await input.clear();
+    await input.fill(String(value));
+    await expect(input).toHaveValue(String(value));
+  }
   await form.getByRole('button', { name: 'Guardar saldos actuales' }).click();
   await expect(page.getByText('Saldos actuales configurados')).toBeVisible();
+  await expect(form).toBeHidden();
 }
 
 async function go(page, name) {
   await page.locator('.bottom').getByRole('button', { name, exact: true }).click();
+}
+
+async function separateExternal(page, amount = 600, owner = 'Mamá', account = 'account-yape') {
+  await go(page, 'Registrar');
+  await page.getByRole('tab', { name: /Separar/ }).click();
+  const form = page.locator('#separateForm');
+  await form.locator('[name="accountId"]').selectOption(account);
+  await form.locator('[name="amount"]').fill(String(amount));
+  await form.locator('label').filter({ hasText: 'Dinero ajeno' }).click();
+  await expect(form.locator('[name="kind"][value="external"]')).toBeChecked();
+  await form.locator('[name="owner"]').fill(owner);
+  await form.getByRole('button', { name: 'Separar dinero' }).click();
+}
+
+async function addSaving(page, amount = 500, account = 'account-cash') {
+  await go(page, 'Ahorro');
+  await page.getByRole('button', { name: '＋ Ahorrar' }).click();
+  const form = page.locator('#savingContributionForm');
+  await form.locator('[name="accountId"]').selectOption(account);
+  await form.locator('[name="amount"]').fill(String(amount));
+  await form.getByRole('button', { name: 'Confirmar ahorro' }).click();
 }
 
 test('flujo simple: total, dinero ajeno, ahorro, ingreso y gasto cuadran', async ({ page }) => {
@@ -23,19 +53,13 @@ test('flujo simple: total, dinero ajeno, ahorro, ingreso y gasto cuadran', async
 
   await page.getByRole('button', { name: /Marcar dinero ajeno/ }).click();
   const separateForm = page.locator('#separateForm');
-  await expect(separateForm).toBeVisible();
   await separateForm.locator('[name="accountId"]').selectOption('account-yape');
   await separateForm.locator('[name="amount"]').fill('600');
   await separateForm.locator('[name="owner"]').fill('Mamá');
   await separateForm.getByRole('button', { name: 'Separar dinero' }).click();
   await expect(page.getByText(/marcados como dinero ajeno/)).toBeVisible();
 
-  await go(page, 'Ahorro');
-  await page.getByRole('button', { name: '＋ Ahorrar' }).click();
-  const savingForm = page.locator('#savingContributionForm');
-  await savingForm.locator('[name="accountId"]').selectOption('account-cash');
-  await savingForm.locator('[name="amount"]').fill('500');
-  await savingForm.getByRole('button', { name: 'Confirmar ahorro' }).click();
+  await addSaving(page);
   await expect(page.locator('[data-testid="saving-total"]')).toContainText('500.00');
 
   await go(page, 'Resumen');
@@ -68,7 +92,7 @@ test('flujo simple: total, dinero ajeno, ahorro, ingreso y gasto cuadran', async
 
 test('transferir no cambia el total ni el disponible', async ({ page }) => {
   await page.goto('/');
-  await configureCurrentMoney(page, { yape:1500, cash:500, bank:1000 });
+  await configureCurrentMoney(page, { yape: 1500, cash: 500, bank: 1000 });
   await go(page, 'Registrar');
   await page.getByRole('tab', { name: /Transferir/ }).click();
   const form = page.locator('#transferForm');
@@ -79,35 +103,20 @@ test('transferir no cambia el total ni el disponible', async ({ page }) => {
   await go(page, 'Mi dinero');
   await expect(page.locator('[data-testid="money-total"]')).toContainText('3,000.00');
   await expect(page.locator('.formula-result strong')).toContainText('3,000.00');
-  await expect(page.locator('[data-testid="account-card"]').filter({hasText:'Yape'})).toContainText('S/ 1,200.00');
-  await expect(page.locator('[data-testid="account-card"]').filter({hasText:'Efectivo'})).toContainText('S/ 800.00');
+  await expect(page.locator('[data-testid="account-card"]').filter({ hasText: 'Yape' })).toContainText('S/ 1,200.00');
+  await expect(page.locator('[data-testid="account-card"]').filter({ hasText: 'Efectivo' })).toContainText('S/ 800.00');
 });
 
 test('retirar ahorro libera disponible y devolver dinero ajeno conserva el disponible', async ({ page }) => {
   await page.goto('/');
-  await configureCurrentMoney(page, { yape:2000, cash:1000, bank:0 });
-
-  await go(page, 'Registrar');
-  await page.getByRole('tab', { name: /Separar/ }).click();
-  let form = page.locator('#separateForm');
-  await form.locator('[name="accountId"]').selectOption('account-yape');
-  await form.locator('[name="amount"]').fill('600');
-  await form.locator('label').filter({ hasText: 'Dinero ajeno' }).click();
-  await expect(form.locator('[name="kind"][value="external"]')).toBeChecked();
-  await form.locator('[name="owner"]').fill('Mamá');
-  await form.getByRole('button', { name: 'Separar dinero' }).click();
-
-  await go(page, 'Ahorro');
-  await page.getByRole('button', { name: '＋ Ahorrar' }).click();
-  form = page.locator('#savingContributionForm');
-  await form.locator('[name="accountId"]').selectOption('account-cash');
-  await form.locator('[name="amount"]').fill('500');
-  await form.getByRole('button', { name: 'Confirmar ahorro' }).click();
+  await configureCurrentMoney(page, { yape: 2000, cash: 1000, bank: 0 });
+  await separateExternal(page);
+  await addSaving(page);
 
   await page.getByRole('button', { name: 'Retirar del ahorro' }).click();
-  form = page.locator('#savingWithdrawalForm');
+  let form = page.locator('#savingWithdrawalForm');
   await form.locator('[name="amount"]').fill('200');
-  page.once('dialog', async dialog => dialog.accept());
+  page.once('dialog', dialog => dialog.accept());
   await form.getByRole('button', { name: 'Retirar del ahorro' }).click();
   await expect(page.locator('[data-testid="saving-total"]')).toContainText('300.00');
 
@@ -116,7 +125,7 @@ test('retirar ahorro libera disponible y devolver dinero ajeno conserva el dispo
   await page.getByRole('button', { name: 'Devolver dinero ajeno' }).click();
   form = page.locator('#externalReturnForm');
   await form.locator('[name="amount"]').fill('200');
-  page.once('dialog', async dialog => dialog.accept());
+  page.once('dialog', dialog => dialog.accept());
   await form.getByRole('button', { name: 'Confirmar devolución' }).click();
   await expect(page.locator('[data-testid="money-total"]')).toContainText('2,800.00');
   await expect(page.locator('.formula-result strong')).toContainText('2,100.00');
